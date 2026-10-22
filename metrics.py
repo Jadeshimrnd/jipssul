@@ -118,6 +118,68 @@ summary["sentiment_method"] = {"weights": {"volume": W_VOL, "rising": W_RISE, "n
     "volume_score": "50 + 전년 동기 대비 거래량 증감률 x 1.5 (최근 3개 완결 월 vs 작년 같은 3개월, 이번 달 제외)", "new_high_score": f"50 + (신고가 비중 - {NH_BASE}) x 2.5",
     "thresholds": {"매수 우위": ">= 60", "매도 우위": "<= 40", "관망": "41~59"}, "reference_date": today.isoformat()}
 
+# ---------- 전·월세 ----------
+# rents 테이블(collect.py가 채움)이 없거나 비어 있으면 건너뜀.
+try:
+    rent_rows = con.execute("""SELECT sgg_cd, umd_nm, jibun, apt_nm, area, deposit, monthly_rent,
+                                      deal_date, contract_type FROM rents ORDER BY deal_date""").fetchall()
+except sqlite3.OperationalError:
+    rent_rows = []
+if rent_rows:
+    rc_recent = [ym_ago(i) for i in (3, 2, 1)]          # 이번 달 제외 최근 3개 완결 월
+    rc_prev = [ym_ago(i) for i in (15, 14, 13)]         # 작년 같은 3개월
+    six = set(ym_ago(i) for i in range(6, 0, -1))       # 전세가율용 최근 6개 완결 월
+    pct_chg = lambda a, b: round((a - b) / b * 100, 1) if b else None
+    share = lambda a, b: round(a / (a + b) * 100, 1) if a + b else None
+
+    def rent_scope(pred):
+        cnt = defaultdict(lambda: [0, 0])               # month -> [전세, 월세]
+        ren = ty = 0
+        for sgg, umd, jb, nm, area, dep, mr, d, ct in rent_rows:
+            if not pred(sgg): continue
+            m = d[:7]; cnt[m][0 if mr == 0 else 1] += 1
+            if m in rc_recent and ct:
+                ty += 1; ren += ct == "갱신"
+        j = sum(cnt[m][0] for m in rc_recent); w = sum(cnt[m][1] for m in rc_recent)
+        jp = sum(cnt[m][0] for m in rc_prev); wp = sum(cnt[m][1] for m in rc_prev)
+        ws, wsp = share(w, j), share(wp, jp)
+        wsd = round(ws - wsp, 1) if ws is not None and wsp is not None else None
+        rs = round(ren / ty * 100, 1) if ty else None
+        jy, wy = pct_chg(j, jp), pct_chg(w, wp)
+        f = lambda v, up, dn: "작년과 비슷" if v is None or abs(v) < 1 else f"{abs(v):.0f}% {up if v > 0 else dn}"
+        sent = (f"최근 3개월 전세 거래는 작년 같은 기간보다 {f(jy,'늘고','줄고')}, 월세는 {f(wy,'늘어','줄어')} "
+                f"월세 비중이 {ws or 0:.0f}%" + (f"({'+' if wsd >= 0 else ''}{wsd:.1f}%p)" if wsd is not None else "")
+                + (f", 갱신 계약이 {rs:.0f}%예요." if rs is not None else "예요."))
+        sent = sent.replace("비슷, 월세는", "비슷하고, 월세는").replace("작년과 비슷 월세", "작년과 비슷해 월세")
+        return {"jeonse": j, "wolse": w, "jeonse_prev": jp, "wolse_prev": wp,
+                "jeonse_yoy_pct": jy, "wolse_yoy_pct": wy, "wolse_share_pct": ws,
+                "wolse_share_prev_pct": wsp, "wolse_share_change_pp": wsd, "renewal_share_pct": rs,
+                "summary": sent,
+                "windows": {"recent": [rc_recent[0], rc_recent[-1]], "prev": [rc_prev[0], rc_prev[-1]],
+                            "note": "신고 기한(계약 후 30일) 때문에 이번 달은 제외하고, 작년 같은 기간과 비교해요. 지난달은 아직 일부 덜 집계됐을 수 있어요."},
+                "monthly": [{"month": m, "jeonse": cnt[m][0], "wolse": cnt[m][1]} for m in spark_months]}
+
+    summary["rent"] = {k: rent_scope(f) for k, f in SCOPES.items()}
+
+    # 단지·면적대별 전세 중위가와 전세가율
+    jd = defaultdict(lambda: defaultdict(list))
+    for sgg, umd, jb, nm, area, dep, mr, d, ct in rent_rows:
+        if mr == 0 and dep > 0: jd[(sgg, umd, jb, nm, band(area))][d[:7]].append(dep)
+    byid = {c["id"]: c for c in complexes}
+    for key, mon in jd.items():
+        c = byid.get("{}-{}-{}-{}-{}".format(*key))
+        if not c: continue
+        c["jeonse_series"] = [{"month": m, "median": round(statistics.median(v) / 10000, 2), "count": len(v)}
+                              for m, v in sorted(mon.items())]
+        recent = [x for m, v in mon.items() if m in six for x in v]
+        sales = [a for d, a, *_ in cx[key] if d[:7] in six]
+        if len(recent) >= 3:
+            jm = statistics.median(recent)
+            c["jeonse"] = round(jm / 10000, 2)
+            c["jeonse_ratio"] = round(jm / statistics.median(sales) * 100, 1) if len(sales) >= 2 else None
+    for c in complexes:
+        c.setdefault("jeonse", None); c.setdefault("jeonse_ratio", None)
+
 json.dump(summary, open(os.path.join(OUT, "summary.json"), "w", encoding="utf-8"), ensure_ascii=False)
 json.dump(complexes, open(os.path.join(OUT, "complexes.json"), "w", encoding="utf-8"), ensure_ascii=False)
 print(f"단지(면적대) {len(complexes)}개 | 상승 {up} | 하락 {down}")
@@ -127,3 +189,6 @@ for c in ranked[:5]:
 for k, v in summary["sentiment"].items():
     g = v["signals"]
     print(f"시장의 마음[{k}] {v['label']} {v['score']}점 | 거래량 {g['volume_change_pct']}% | 상승 {g['rising_share_pct']}% | 신고가 {g['new_high_share_pct']}%")
+for k, v in summary.get("rent", {}).items():
+    print(f"전월세[{k}] 전세 {v['jeonse']}({v['jeonse_yoy_pct']}%) 월세 {v['wolse']}({v['wolse_yoy_pct']}%) 월세비중 {v['wolse_share_pct']}% 갱신 {v['renewal_share_pct']}%")
+if "rent" not in summary: print("전월세: rents 데이터 없음 (건너뜀)")

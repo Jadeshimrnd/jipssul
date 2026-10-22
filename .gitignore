@@ -1,3 +1,4 @@
 ﻿trades.db
 log.txt
 __pycache__/
+rent_backfill.log
