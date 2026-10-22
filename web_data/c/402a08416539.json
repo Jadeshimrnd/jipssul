@@ -1,1 +1,1 @@
-{"series":[{"month":"2017-03","median":10.0,"count":1},{"month":"2019-03","median":12.2,"count":1}],"jeonse_series":[],"recent":[{"date":"2019-03-22","price":12.2,"area":134.63,"floor":14},{"date":"2017-03-20","price":10.0,"area":134.63,"floor":14}],"trades6m":[]}
+{"series":[{"month":"2017-03","median":10.0,"count":1},{"month":"2019-03","median":12.2,"count":1}],"jeonse_series":[{"month":"2019-03","median":5.0,"count":1}],"recent":[{"date":"2019-03-22","price":12.2,"area":134.63,"floor":14},{"date":"2017-03-20","price":10.0,"area":134.63,"floor":14}],"trades6m":[]}
