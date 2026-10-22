@@ -56,10 +56,38 @@ for (sgg, umd, jb, nm, b), deals in cx.items():
                and sum(1 for i in range(6) if ym_ago(i) in monthly) >= 4,
     })
 
+# ---------- 마켓 탐색 기간별 (7·30·60·90·180·365일) ----------
+# 기준 = DB의 마지막 계약일. 최근 N일 (D-N, D] 중위가 vs 직전 N일 (D-2N, D-N] 중위가.
+# 등락률은 두 구간 모두 최소 거래 수(7·30일 2건, 그 외 3건)를 넘을 때만 계산.
+PERIODS = [7, 30, 60, 90, 180, 365]
+MIN_N = {7: 2, 30: 2}
+D_LAST = datetime.date.fromisoformat(rows[-1][7][:10]) if rows else today
+_iso = lambda d: d.isoformat()
+_cut = {N: (_iso(D_LAST - datetime.timedelta(N)), _iso(D_LAST - datetime.timedelta(2 * N))) for N in PERIODS}
+_oldest = _cut[365][1]
+for c, ((sgg, umd, jb, nm, b), deals) in zip(complexes, cx.items()):
+    ds = [(d[:10], a) for d, a, *_ in deals if d[:10] > _oldest]
+    pp = []
+    for N in PERIODS:
+        c1, c2 = _cut[N]
+        cur = [a for d, a in ds if d > c1]
+        prv = [a for d, a in ds if c2 < d <= c1]
+        m = statistics.median(cur) if cur else None
+        ch = None
+        k = MIN_N.get(N, 3)
+        if len(cur) >= k and len(prv) >= k:
+            ch = round((m - statistics.median(prv)) / statistics.median(prv) * 100, 1)
+        pp.append([round(m / 10000, 2) if m else None, ch, len(cur)])
+    c["p"] = pp
+PERIOD_META = {"days": PERIODS, "last_deal": _iso(D_LAST), "min_trades": {str(N): MIN_N.get(N, 3) for N in PERIODS},
+    "ranges": {str(N): {"from": _iso(D_LAST - datetime.timedelta(N - 1)), "to": _iso(D_LAST),
+                        "prev_from": _iso(D_LAST - datetime.timedelta(2 * N - 1)), "prev_to": _cut[N][0]} for N in PERIODS}}
+
 ranked = sorted([c for c in complexes if c["change"] is not None and c["count"] >= 10],
                 key=lambda c: c["change"], reverse=True)
 summary = {"updated": today.isoformat(), "total": len(complexes), "up": up, "down": down,
            "top_up": ranked[:20], "top_down": ranked[-20:][::-1]}
+summary["periods"] = PERIOD_META
 
 # ---------- 지금, 시장의 마음 ----------
 # 실거래는 계약 후 30일 안에 신고되므로 이번 달·지난달은 덜 집계돼 있음.
@@ -196,7 +224,7 @@ except ImportError:
 have = {c["sgg"] for c in complexes}
 summary["regions"] = {k: v for k, v in REGIONS.items() if k in have}
 for k in have - set(REGIONS): summary["regions"][k] = k
-LIST_KEYS = ("id", "sgg", "dong", "name", "band", "price", "change", "count", "jeonse", "jeonse_ratio", "rep")
+LIST_KEYS = ("id", "sgg", "dong", "name", "band", "price", "change", "count", "jeonse", "jeonse_ratio", "rep", "p")
 DETAIL_KEYS = ("series", "jeonse_series", "recent", "trades6m")
 CDIR = os.path.join(OUT, "c"); os.makedirs(CDIR, exist_ok=True)
 for old in glob.glob(os.path.join(CDIR, "*.json")): os.remove(old)   # 지난 실행 파일 정리

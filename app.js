@@ -1,5 +1,5 @@
 let SGG={"11440":"서울 마포구","11170":"서울 용산구","11110":"서울 종로구","11620":"서울 관악구","11140":"서울 중구","11305":"서울 강북구","41590":"경기 화성시","41310":"경기 구리시","41117":"경기 수원시 영통구","41465":"경기 용인시 수지구","28185":"인천 연수구","28237":"인천 부평구"};
-const $=s=>document.querySelector(s);let ALL=[],S={region:"all",q:"",sgg:"",rep:false,sort:"change",dir:-1,page:0,sel:null,per:12};
+const $=s=>document.querySelector(s);let ALL=[],S={region:"all",q:"",sgg:"",rep:false,sort:"pc",dir:-1,pd:90,page:0,sel:null,per:12};
 const band=b=>b==="~50"?"~50㎡":b==="110+"?"110㎡+":b+"㎡";
 const pct=v=>v==null?"-":(v>0?"+":"")+v.toFixed(1)+"%";const cls=v=>v>0?"up":v<0?"down":"";
 const eok=v=>v==null?"-":(+v).toFixed(v>=10?1:2).replace(/\.?0+$/,"")+"억";
@@ -9,7 +9,7 @@ function isRep(c){if(c.count<20||c.change==null)return false;const m=new Set((c.
 const J=u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
 async function get(dir){const a=await J(`${dir}/summary.json?t=${Date.now()}`);const v=a.updated_at||a.updated||"";const b=await fetch(`${dir}/complexes.json?v=${encodeURIComponent(v)}`).then(r=>{if(!r.ok)throw 0;return r.json()});window.DIR=dir;window.VER=v;return[a,b]}
 async function init(){let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
+window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;applyPd();renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
 fillSgg();renderFavBar();$("#favbtn").onclick=()=>openFav();$("#favclose").onclick=closeFav;$("#favdim").onclick=closeFav;$("#favq").oninput=renderFavPick;
 document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render();if(S.region==="fav"&&!FAV.length)openFav()});
 $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
@@ -17,18 +17,26 @@ $("#rep").onchange=e=>{S.rep=e.target.checked;S.page=0;renderList()};
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;S.dir=S.sort===k?-S.dir:(k==="name"?1:-1);S.sort=k;renderList()});
 $("#prev").onclick=()=>{if(S.page>0){S.page--;renderList()}};$("#next").onclick=()=>{S.page++;renderList()};render()}
 const inRegion=c=>S.region==="all"||(S.region==="fav"?FAV.includes(c.sgg):false)||S.region!=="fav"&&(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg));
+// ---------- 마켓 탐색 기간 (7~365일) ----------
+const PDS=[7,30,60,90,180,365];
+function applyPd(){const ds=(window.PMETA&&window.PMETA.days)||PDS,i=ds.indexOf(S.pd);ALL.forEach(c=>{const x=c.p&&i>=0?c.p[i]:null;if(x){c.pp=x[0];c.pc=x[1];c.pn=x[2]}else{c.pp=null;c.pc=c.change;c.pn=null}})}
+function renderPd(){const m=window.PMETA,r=m&&m.ranges&&m.ranges[S.pd],fd=s=>s.replace(/-/g,".");
+$("#pdb").innerHTML=PDS.map(n=>`<button data-n="${n}" class="${S.pd===n?"on":""}">${n}일</button>`).join("");
+$("#pdcap").innerHTML=(r?`${fd(r.from)} ~ ${fd(r.to)} vs 직전 ${S.pd}일 (${fd(r.prev_from)} ~ ${fd(r.prev_to)}) · 중위가 비교, 양쪽 각 ${m.min_trades[S.pd]}건 이상일 때만 등락률 표시`:"최근 3개월 vs 직전 3개월 중위가")+`<br>※ 최근 30일은 신고 지연(계약 후 30일 내 신고)으로 거래가 덜 잡힐 수 있어요.`;
+$("#mvtag").textContent=`최근 ${S.pd}일 상승률 상위 · 거래 활발 단지`;
+document.querySelectorAll("#pdb button").forEach(b=>b.onclick=()=>{S.pd=+b.dataset.n;S.page=0;applyPd();renderPd();render();b.scrollIntoView({block:"nearest",inline:"nearest"})})}
 function render(){renderSenti();renderRent();const r=ALL.filter(inRegion);$("#k-total").textContent=r.length.toLocaleString();
 $("#k-up").textContent=r.filter(c=>c.change>0).length.toLocaleString();$("#k-down").textContent=r.filter(c=>c.change<0).length.toLocaleString();
 const reps=r.filter(c=>c.rep);$("#k-rep").textContent=reps.length;
-const top=[...reps].sort((a,b)=>b.change-a.change).slice(0,3);
-$("#movers").innerHTML=top.map(c=>`<div class="mv" data-id="${c.id}"><div class="g">${SGG[c.sgg]} · ${c.dong}</div><div class="n">${c.name}</div><div class="s"><span>${band(c.band)} · ${eok(c.price)}</span><b class="${cls(c.change)}">${pct(c.change)}</b></div></div>`).join("")||'<p class="muted">조건을 만족하는 단지가 없어요.</p>';
+const top=reps.filter(c=>c.pc!=null).sort((a,b)=>b.pc-a.pc).slice(0,3);
+$("#movers").innerHTML=top.map(c=>`<div class="mv" data-id="${c.id}"><div class="g">${SGG[c.sgg]} · ${c.dong}</div><div class="n">${c.name}</div><div class="s"><span>${band(c.band)} · ${eok(c.pp??c.price)}</span><b class="${cls(c.pc)}">${pct(c.pc)}</b></div></div>`).join("")||'<p class="muted">조건을 만족하는 단지가 없어요.</p>';
 document.querySelectorAll(".mv").forEach(d=>d.onclick=()=>select(d.dataset.id));
 if(!S.sel||!r.find(c=>c.id===S.sel))S.sel=(top[0]||r[0]||{}).id;renderList();renderDetail()}
 function filtered(){const q=S.q.toLowerCase();let r=ALL.filter(c=>inRegion(c)&&(!S.sgg||c.sgg===S.sgg)&&(!S.rep||c.rep)&&(!q||(c.name+c.dong+SGG[c.sgg]).toLowerCase().includes(q)));
-const k=S.sort,d=S.dir;return r.sort((a,b)=>{if(k==="change"){if(a.rep!==b.rep)return a.rep?-1:1;const x=a.change??-1e9*d,y=b.change??-1e9*d;return(x-y)*d}if(k==="name")return(gu(a.sgg)+a.name).localeCompare(gu(b.sgg)+b.name,"ko")*d;if(a[k]==null||b[k]==null)return(a[k]==null)-(b[k]==null);return(a[k]-b[k])*d})}
+const k=S.sort,d=S.dir;return r.sort((a,b)=>{if(k==="pc"){if((a.pc==null)!==(b.pc==null))return a.pc==null?1:-1;if(a.rep!==b.rep)return a.rep?-1:1;return((a.pc||0)-(b.pc||0))*d}if(k==="pp"){const x=a.pp??a.price,y=b.pp??b.price;return(x-y)*d}if(k==="name")return(gu(a.sgg)+a.name).localeCompare(gu(b.sgg)+b.name,"ko")*d;if(a[k]==null||b[k]==null)return(a[k]==null)-(b[k]==null);return(a[k]-b[k])*d})}
 function renderList(){const r=filtered(),pages=Math.max(1,Math.ceil(r.length/20));S.page=Math.min(S.page,pages-1);const p=r.slice(S.page*20,S.page*20+20);
 $("#cnt").textContent=r.length.toLocaleString();
-$("#rows").innerHTML=p.map(c=>`<tr data-id="${c.id}" class="${c.id===S.sel?"sel":""}"><td><div class="t1">${c.rep?"★ ":""}${gu(c.sgg)}<i>${sido(c.sgg)}</i></div><div class="t2">${c.name} · ${band(c.band)}</div></td><td class="r">${(+c.price).toFixed(1)}</td><td class="r ${cls(c.change)}">${pct(c.change)}</td><td class="r">${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(0)+"%"}</td></tr>`).join("");
+$("#rows").innerHTML=p.map(c=>`<tr data-id="${c.id}" class="${c.id===S.sel?"sel":""}"><td><div class="t1">${c.rep?"★ ":""}${gu(c.sgg)}<i>${sido(c.sgg)}</i></div><div class="t2">${c.name} · ${band(c.band)}</div></td><td class="r">${c.pp!=null?(+c.pp).toFixed(1):`<span class="muted" title="기간 내 거래 없음 · 마지막 거래가">${(+c.price).toFixed(1)}</span>`}</td><td class="r"><span class="${cls(c.pc)}">${pct(c.pc)}</span>${c.pn!=null?`<div class="t3">${c.pn}건</div>`:""}</td><td class="r">${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(0)+"%"}</td></tr>`).join("");
 document.querySelectorAll("#rows tr").forEach(t=>t.onclick=()=>select(t.dataset.id));
 $("#pinfo").textContent=r.length?`${S.page*20+1}–${S.page*20+p.length} / ${r.length}개`:"결과 없음";
 document.querySelectorAll("th[data-s]").forEach(th=>{th.textContent=th.textContent.replace(/ [↑↓]$/,"")+(th.dataset.s===S.sort?(S.dir>0?" ↑":" ↓"):"")})}
@@ -112,3 +120,29 @@ return `<h5>${n} <span class="muted">${g.length}</span></h5><div class="chips">$
 document.querySelectorAll("#favlist .fchip").forEach(e=>e.onclick=()=>toggleFav(e.dataset.k))}
 function openFav(){$("#favq").value="";renderFavPick();$("#favpanel").classList.add("on");document.body.classList.add("noscroll")}
 function closeFav(){$("#favpanel").classList.remove("on");document.body.classList.remove("noscroll")}
+
+// ---------- 상단 아파트 검색 (서울·경기·인천) ----------
+const CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const cho=s=>[...s].map(ch=>{const c=ch.charCodeAt(0)-44032;return c>=0&&c<11172?CHO[Math.floor(c/588)]:ch}).join("");
+const nz=s=>(s||"").toLowerCase().replace(/\s+/g,"");
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+let GI=null,GH=[],GA=-1,GT;
+function gIndex(){if(GI&&GI.n===ALL.length)return GI;GI=ALL.filter(c=>/^(11|41|28)/.test(c.sgg)).map(c=>{const nm=nz(c.name),all=nz(c.name+c.dong+(SGG[c.sgg]||""));return{c,nm,all,ch:cho(all),nch:cho(nm)}});GI.n=ALL.length;return GI}
+function gSearch(q){const k=nz(q);if(!k)return[];const isCho=/^[ㄱ-ㅎ]+$/.test(k),o=[];
+for(const e of gIndex()){let sc=-1;if(isCho){if(e.nch.startsWith(k))sc=3;else if(e.ch.includes(k))sc=1}else{if(e.nm.startsWith(k))sc=4;else if(e.nm.includes(k))sc=3;else if(e.all.includes(k))sc=2}
+if(sc>=0)o.push([sc,e.c])}
+return o.sort((a,b)=>b[0]-a[0]||(b[1].count||0)-(a[1].count||0)||a[1].name.localeCompare(b[1].name,"ko")).slice(0,20).map(x=>x[1])}
+function gRender(){const q=$("#gq").value,r=$("#gres");$("#gx").classList.toggle("hide",!q);
+if(!q.trim()){r.innerHTML="";r.classList.remove("on");$("#gq").setAttribute("aria-expanded","false");return}
+GH=gSearch(q);GA=GH.length?0:-1;
+r.innerHTML=GH.length?GH.map((c,i)=>`<button type="button" role="option" class="gi${i===GA?" act":""}" data-i="${i}"><span class="gn">${esc(c.name)} <em>${band(c.band)}</em></span><span class="gm">${esc(SGG[c.sgg]||c.sgg)} · ${esc(c.dong)}</span><b class="gp">${eok(c.price)}</b></button>`).join(""):'<div class="gnone">검색 결과가 없어요. (서울·경기·인천만 검색돼요)</div>';
+r.classList.add("on");$("#gq").setAttribute("aria-expanded","true");
+r.querySelectorAll(".gi").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>gPick(+b.dataset.i)})}
+function gAct(i){GA=i;document.querySelectorAll("#gres .gi").forEach((b,j)=>{b.classList.toggle("act",j===i);if(j===i)b.scrollIntoView({block:"nearest"})})}
+function gClose(){$("#gres").classList.remove("on");$("#gq").setAttribute("aria-expanded","false")}
+function gPick(i){const c=GH[i];if(!c)return;gClose();$("#gq").blur();S.sel=c.id;renderList();renderDetail();setTimeout(()=>$("#detail").scrollIntoView({behavior:"smooth",block:"start"}),60)}
+(function(){const q=$("#gq");q.oninput=()=>{clearTimeout(GT);GT=setTimeout(gRender,150)};q.onfocus=()=>{if(q.value.trim())gRender()};
+q.onkeydown=e=>{if(e.key==="ArrowDown"){e.preventDefault();if(GH.length)gAct((GA+1)%GH.length)}else if(e.key==="ArrowUp"){e.preventDefault();if(GH.length)gAct((GA-1+GH.length)%GH.length)}
+else if(e.key==="Enter"){e.preventDefault();clearTimeout(GT);if(!$("#gres").classList.contains("on"))gRender();gPick(GA<0?0:GA)}else if(e.key==="Escape"){gClose()}};
+q.onblur=()=>setTimeout(gClose,150);$("#gx").onclick=()=>{q.value="";gRender();q.focus()};
+document.addEventListener("click",e=>{if(!e.target.closest("#gs"))gClose()})})();

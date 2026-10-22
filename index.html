@@ -1,5 +1,5 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>제이드의 내집마련</title><link rel="stylesheet" href="style.css?v=20261022135715"><link rel="manifest" href="manifest.json">
+<title>제이드의 내집마련</title><link rel="stylesheet" href="style.css?v=20261022105024"><link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7a5a36">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,20 +11,22 @@
 <div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated"></span></div></div></header>
 <main class="wrap">
 <section class="hero"><div class="eyebrow">SEOUL METROPOLITAN AREA</div><h1>R=VD 구체적으로 상상할수록 현실에 가까워진다</h1><p>지역별 가격 동향과 서울 집값이 경기도 집값에 미치는 영향을 파악하기 위한 트래킹 사이트 개발 단계 사이트입니다.</p></section>
+<section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="아파트 검색 · 단지명, 동, 지역 (서울·경기·인천)" aria-label="아파트 검색" role="combobox" aria-expanded="false" aria-controls="gres"><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
 <section class="card kpis"><div><h4>조회 단지</h4><b id="k-total">-</b><small>개</small><p>단지·면적대 기준</p></div>
 <div><h4>상승 단지</h4><b id="k-up" class="up">-</b><small>개</small><p>최근 3개월 vs 직전 3개월</p></div>
 <div><h4>하락 단지</h4><b id="k-down" class="down">-</b><small>개</small><p>최근 3개월 vs 직전 3개월</p></div>
 <div><h4>대표 단지 후보</h4><b id="k-rep">-</b><small>개</small><p>거래 20건↑·최근 꾸준히 거래</p></div></section>
 <section class="two"><div class="card" id="senti"><div class="ch"><h3>지금, 시장의 마음</h3><span class="tag">준비 중</span></div><p class="muted">시장 심리 요약은 준비 중이에요.</p></div>
 <div class="card" id="rentc"><div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag">준비 중</span></div><p class="muted">전월세 실거래가 연동 후 표시돼요.</p></div></section>
-<section class="card"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
-<p class="muted sm">거래 20건 이상이고 최근 6개월 중 4개월 이상 거래된 단지만 순위에 포함해요.</p></section>
+<section class="card"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
+<p class="muted sm">거래 20건 이상이고 최근 6개월 중 4개월 이상 거래된 단지 중, 마켓 탐색에서 고른 기간의 양쪽 구간에 거래가 충분한(7·30일 2건, 그 외 3건 이상) 단지만 순위에 포함해요.</p></section>
 <section class="main">
 <div class="card list"><div class="ch"><h3>마켓 탐색 <span id="cnt" class="muted"></span></h3></div>
-<div class="filters"><input id="q" placeholder="⌕  단지명, 지역으로 검색"><select id="sgg"><option value="">모든 시·구</option></select>
+<div class="filters"><input id="q" placeholder="목록 안에서 거르기" aria-label="목록 필터"><select id="sgg"><option value="">모든 시·구</option></select>
 <label><input type="checkbox" id="rep"> 대표 단지만</label><button id="favbtn" class="favbtn">★ 관심지역 설정 <span id="favn">0/5</span></button></div>
 <div id="favbar" class="favbar"></div>
-<div class="tblw"><table class="tbl"><thead><tr><th data-s="name">지역 / 단지 · 평수</th><th data-s="price" class="r">가격 · 억</th><th data-s="change" class="r">등락률</th><th data-s="jeonse_ratio" class="r">전세가율</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="pdw"><div id="pdb" class="pdb" role="group" aria-label="기간"></div><p id="pdcap" class="muted pdcap"></p></div>
+<div class="tblw"><table class="tbl"><thead><tr><th data-s="name">지역 / 단지 · 평수</th><th data-s="pp" class="r">가격 · 억</th><th data-s="pc" class="r">등락률</th><th data-s="jeonse_ratio" class="r">전세가율</th></tr></thead><tbody id="rows"></tbody></table></div>
 <div class="pager"><span id="pinfo"></span><span><button id="prev">‹</button><button id="next">›</button></span></div></div>
 <div class="card detail" id="detail"></div></section>
 </main>
@@ -32,4 +34,4 @@
 <p class="muted sm">시·구를 최대 5곳까지 담을 수 있어요. 이 기기에 저장돼요.</p><input id="favq" placeholder="⌕  지역 이름으로 찾기 (예: 안양, 분당)"><div id="favlist" class="favlist"></div></div></div>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>제이드의 내집마련</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가</span></footer>
-<script src="app.js?v=20261022135715"></script></body></html>
+<script src="app.js?v=20261022105024"></script></body></html>
