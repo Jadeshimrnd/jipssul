@@ -34,3 +34,4 @@ svg text{font-size:10px;fill:#8b7f72}.detail h3{margin:26px 0 10px;font-size:15p
 .sigs.r4{grid-template-columns:repeat(4,1fr)}.sigs em{display:block;font-style:normal;font-size:11px;color:#8b7f72}.sigs em.up{color:#b8473a}.sigs em.down{color:#3f6a9a}
 .jst{display:flex;gap:10px;align-items:center;margin:8px 0}.jst>div{background:#f4ecdd;border-radius:6px;padding:6px 12px}.jst small{display:block;font-size:11px;color:#8b7f72}.jst b{font-size:16px}.jst .muted{font-size:11px}
 .jl{color:#3f6a9a}.jl2{color:#8a6a43}.main{grid-template-columns:440px 1fr}
+.per button:disabled{color:#c8bdb0;cursor:default}.tdot{color:#c9973d}.loading{padding:40px 0}

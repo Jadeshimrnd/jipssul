@@ -6,9 +6,10 @@ const eok=v=>v==null?"-":(+v).toFixed(v>=10?1:2).replace(/\.?0+$/,"")+"억";
 const gu=s=>(SGG[s]||s).split(" ").slice(1).join(" ");const sido=s=>(SGG[s]||"").split(" ")[0];
 function lastMonths(n){const d=new Date(window.UPDATED||Date.now()),o=[];for(let i=0;i<n;i++){const x=new Date(d.getFullYear(),d.getMonth()-i,1);o.push(x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"))}return o}
 function isRep(c){if(c.count<20||c.change==null)return false;const m=new Set((c.series||[]).filter(s=>s.count>0).map(s=>s.month));return lastMonths(6).filter(x=>m.has(x)).length>=4}
-async function get(dir){const[a,b]=await Promise.all(["summary","complexes"].map(f=>fetch(`${dir}/${f}.json`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})));return[a,b]}
+const J=u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
+async function get(dir){const a=await J(`${dir}/summary.json?t=${Date.now()}`);const v=a.updated_at||a.updated||"";const b=await fetch(`${dir}/complexes.json?v=${encodeURIComponent(v)}`).then(r=>{if(!r.ok)throw 0;return r.json()});window.DIR=dir;window.VER=v;return[a,b]}
 async function init(){let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;ALL=cx.map(c=>({...c,rep:isRep(c)}));$("#updated").textContent="업데이트 "+sum.updated;
+window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;ALL=cx.map(c=>({...c,rep:c.rep!=null?c.rep:isRep(c)}));$("#updated").textContent="업데이트 "+sum.updated;
 Object.keys(SGG).filter(k=>ALL.some(c=>c.sgg===k)).forEach(k=>$("#sgg").insertAdjacentHTML("beforeend",`<option value="${k}">${SGG[k]}</option>`));
 document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render()});
 $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
@@ -32,24 +33,42 @@ document.querySelectorAll("#rows tr").forEach(t=>t.onclick=()=>select(t.dataset.
 $("#pinfo").textContent=r.length?`${S.page*20+1}–${S.page*20+p.length} / ${r.length}개`:"결과 없음";
 document.querySelectorAll("th[data-s]").forEach(th=>{th.textContent=th.textContent.replace(/ [↑↓]$/,"")+(th.dataset.s===S.sort?(S.dir>0?" ↑":" ↓"):"")})}
 function select(id){S.sel=id;renderList();renderDetail()}
-function renderDetail(){const c=ALL.find(x=>x.id===S.sel),el=$("#detail");if(!c){el.innerHTML='<p class="muted">단지를 선택하세요.</p>';return}
+const PERS=[[3,"3개월"],[6,"6개월"],[12,"1년"],[24,"2년"],[36,"3년"],[60,"5년"],[120,"10년"]];let DC={},DREQ=0;
+async function loadDetail(c){if(!c.f)return c;if(DC[c.f])return DC[c.f];const r=await fetch(`${window.DIR}/c/${c.f}.json?v=${encodeURIComponent(window.VER)}`);if(!r.ok)throw new Error("detail "+r.status);return DC[c.f]={...c,...await r.json()}}
+async function renderDetail(){const c0=ALL.find(x=>x.id===S.sel),el=$("#detail");if(!c0){el.innerHTML='<p class="muted">단지를 선택하세요.</p>';return}
+const q=++DREQ;let c=c0.f&&DC[c0.f];if(!c){if(c0.f)el.innerHTML=`<div class="loc">${SGG[c0.sgg]} / ${c0.dong}</div><h2>${c0.name}</h2><p class="muted loading">불러오는 중…</p>`;
+try{c=await loadDetail(c0)}catch(e){if(q===DREQ)el.innerHTML=`<h2>${c0.name}</h2><p class="muted">상세 데이터를 불러오지 못했어요.</p>`;return}if(q!==DREQ)return}
+const rec=c.recent||[],first=((c.series||[])[0]||{}).month||"9999-99";
+const avail=PERS.map(([n],k)=>k<3||first<lastMonths(PERS[k-1][0]).pop());
 el.innerHTML=`<div class="loc">${SGG[c.sgg]} / ${c.dong}</div><h2>${c.name}</h2><div class="muted">전용 ${band(c.band)} · 누적 ${c.count}건${c.rep?'<span class="chip">★ 대표 단지 후보</span>':""}</div>
 <div class="big">${eok(c.price)}<span class="${cls(c.change)}">${pct(c.change)}</span><span class="muted">최근 3개월 vs 직전 3개월 중위가</span></div>
 ${c.jeonse!=null||c.jeonse_ratio!=null?`<div class="jst"><div><small>전세 중위가</small><b>${eok(c.jeonse)}</b></div><div><small>전세가율</small><b>${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(1)+"%"}</b></div><span class="muted">최근 6개 완결 월 기준</span></div>`:""}
-<div class="per">${[[12,"1년"],[24,"2년"],[0,"전체"]].map(([n,l])=>`<button data-n="${n}" class="${S.per===n?"on":""}">${l}</button>`).join("")}<span class="lg">— 매매 중위가 ${(c.jeonse_series||[]).length?'&nbsp; <span class="jl">- - 전세 중위가</span>':""} &nbsp; ▮ 거래량</span></div>
-<div id="chart"></div><h3>최근 거래 내역 <span class="muted" style="font-weight:400;font-size:12px">${c.recent.length}건</span></h3>
-<table class="tbl"><thead><tr><th>계약일</th><th>전용면적</th><th>층</th><th class="r">거래금액</th></tr></thead><tbody>${c.recent.map(t=>`<tr><td>${t.date.replace(/-/g,".")}</td><td>${(+t.area).toFixed(2)}㎡</td><td>${t.floor}층</td><td class="r"><b>${eok(t.price)}</b></td></tr>`).join("")||'<tr><td colspan=4 class="muted">거래 없음</td></tr>'}</tbody></table>`;
-el.querySelectorAll(".per button").forEach(b=>b.onclick=()=>{S.per=+b.dataset.n;renderDetail()});chart(c)}
-function chart(c){let s=c.series||[];if(S.per)s=s.filter(x=>x.month>=lastMonths(S.per).pop());const box=$("#chart");if(s.length<1){box.innerHTML='<p class="muted">기간 내 거래가 없어요.</p>';return}
-const W=box.clientWidth||700,H=280,L=26,R=54,T=14,PH=170,BT=200,BH=50,v=s.map(x=>x.median);const JM=new Map((c.jeonse_series||[]).map(x=>[x.month,x.median]));const jv=s.map((x,i)=>[i,JM.get(x.month)]).filter(x=>x[1]!=null);const av=v.concat(jv.map(x=>x[1]));let mn=Math.min(...av),mx=Math.max(...av);const pad=(mx-mn)*.15||mx*.05;mn-=pad;mx+=pad;
-const n=s.length,X=i=>L+(n===1?(W-L-R)/2:i*(W-L-R)/(n-1)),Y=p=>T+(mx-p)/(mx-mn)*PH,cm=Math.max(...s.map(x=>x.count)),bw=Math.max(3,Math.min(14,(W-L-R)/n*.55));
+<div class="per">${PERS.map(([n,l],k)=>`<button data-n="${n}" class="${S.per===n?"on":""}" ${avail[k]?"":"disabled title='이 기간까지의 거래 기록이 없어요'"}>${l}</button>`).join("")}<span class="lg">— 매매 중위가${S.per<=6?' &nbsp;<span class="tdot">●</span> 개별 거래':""}${(c.jeonse_series||[]).length?'&nbsp; <span class="jl">- - 전세 중위가</span>':""} &nbsp; ▮ 거래량</span></div>
+<div id="chart"></div><h3>최근 거래 내역 <span class="muted" style="font-weight:400;font-size:12px">${rec.length}건</span></h3>
+<table class="tbl"><thead><tr><th>계약일</th><th>전용면적</th><th>층</th><th class="r">거래금액</th></tr></thead><tbody>${rec.map(t=>`<tr><td>${t.date.replace(/-/g,".")}</td><td>${(+t.area).toFixed(2)}㎡</td><td>${t.floor}층</td><td class="r"><b>${eok(t.price)}</b></td></tr>`).join("")||'<tr><td colspan=4 class="muted">거래 없음</td></tr>'}</tbody></table>`;
+el.querySelectorAll(".per button").forEach(b=>b.onclick=()=>{if(b.disabled)return;S.per=+b.dataset.n;renderDetail()});chart(c)}
+const mi=s=>{const[y,m]=s.split("-");return +y*12+(+m-1)};
+function chart(c){const P=S.per||12,ms=lastMonths(P),t0=mi(ms[ms.length-1]),t1=mi(ms[0])+1,box=$("#chart");
+const s=(c.series||[]).filter(x=>{const t=mi(x.month);return t>=t0&&t<t1});
+const td=P<=6?(c.trades6m||[]).filter(x=>{const t=mi(x.date.slice(0,7));return t>=t0&&t<t1}):[];
+const js=(c.jeonse_series||[]).filter(x=>{const t=mi(x.month);return t>=t0&&t<t1});
+if(!s.length&&!td.length){box.innerHTML='<p class="muted">기간 내 거래가 없어요.</p>';return}
+const W=box.clientWidth||700,H=280,L=26,R=54,T=14,PH=170,BT=200,BH=50;
+const av=s.map(x=>x.median).concat(td.map(x=>x.price),js.map(x=>x.median));let mn=Math.min(...av),mx=Math.max(...av);const pad=(mx-mn)*.15||mx*.05||1;mn-=pad;mx+=pad;
+const X=t=>L+(t-t0)/(t1-t0)*(W-L-R),Y=p=>T+(mx-p)/(mx-mn)*PH,XM=m=>X(mi(m)+.5),XD=d=>X(mi(d.slice(0,7))+(+d.slice(8,10)-.5)/31);
+const cm=Math.max(1,...s.map(x=>x.count)),bw=Math.max(2,Math.min(14,(W-L-R)/P*.55));
 let g="";for(let i=0;i<=4;i++){const p=mn+(mx-mn)*i/4;g+=`<line x1="${L}" x2="${W-R}" y1="${Y(p)}" y2="${Y(p)}" stroke="#e8dfcf" stroke-dasharray="3 3"/><text x="${W-R+6}" y="${Y(p)+3}">${p.toFixed(1)}</text>`}
-const pts=s.map((x,i)=>`${X(i)},${Y(x.median)}`).join(" ");
-const bars=s.map((x,i)=>`<rect x="${X(i)-bw/2}" y="${BT+BH-x.count/cm*BH}" width="${bw}" height="${x.count/cm*BH}" fill="${i===n-1?"#8a6a43":"#d9c9ab"}"><title>${x.month} ${x.count}건</title></rect>`).join("");
-const step=Math.ceil(n/6),lab=s.map((x,i)=>(i%step===0||i===n-1)?`<text x="${X(i)}" y="${H-6}" text-anchor="middle">${x.month.replace("-",".")}</text>`:"").join("");
-const dots=s.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.median)}" r="2.5" fill="#fff" stroke="#7a5a35"><title>${x.month} ${x.median}억 (${x.count}건)</title></circle>`).join("");
-const ly=Y(v[n-1]);box.innerHTML=`<svg width="${W}" height="${H}">${g}<polygon points="${X(0)},${T+PH} ${pts} ${X(n-1)},${T+PH}" fill="#efe4d0" opacity=".6"/><polyline points="${pts}" fill="none" stroke="#7a5a35" stroke-width="2"/>${dots}${jv.length?`<polyline points="${jv.map(([i,p])=>`${X(i)},${Y(p)}`).join(" ")}" fill="none" stroke="#3f6a9a" stroke-width="1.8" stroke-dasharray="5 4"/>${jv.map(([i,p])=>`<circle cx="${X(i)}" cy="${Y(p)}" r="2" fill="#3f6a9a"><title>${s[i].month} 전세 ${p}억</title></circle>`).join("")}`:""}
-<rect x="${W-R+2}" y="${ly-9}" width="${R-4}" height="18" rx="3" fill="#7a5a35"/><text x="${W-R+8}" y="${ly+4}" style="fill:#fff;font-weight:700">${v[n-1].toFixed(1)}</text>${bars}${lab}</svg>`}
+let lab="";if(P>=36){for(let t=Math.ceil(t0/12)*12;t<t1;t+=12)lab+=`<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${BT+BH}" stroke="#efe7d9"/><text x="${X(t)+3}" y="${H-6}">${t/12}</text>`}
+else{const st=P<=12?(P<=6?1:2):3;for(let t=t0;t<t1;t++)if((t1-1-t)%st===0)lab+=`<text x="${X(t+.5)}" y="${H-6}" text-anchor="middle">${String(Math.floor(t/12)).slice(2)}.${String(t%12+1).padStart(2,"0")}</text>`}
+const pts=s.map(x=>`${XM(x.month)},${Y(x.median)}`).join(" ");
+const bars=s.map((x,i)=>`<rect x="${XM(x.month)-bw/2}" y="${BT+BH-x.count/cm*BH}" width="${bw}" height="${x.count/cm*BH}" fill="${i===s.length-1?"#8a6a43":"#d9c9ab"}"><title>${x.month} ${x.count}건</title></rect>`).join("");
+const dots=s.length>60?"":s.map(x=>`<circle cx="${XM(x.month)}" cy="${Y(x.median)}" r="2.5" fill="#fff" stroke="#7a5a35"><title>${x.month} ${x.median}억 (${x.count}건)</title></circle>`).join("");
+const tdots=td.map(x=>`<circle cx="${XD(x.date)}" cy="${Y(x.price)}" r="3" fill="#c9973d" fill-opacity=".55" stroke="#8a6a43" stroke-width=".6"><title>${x.date} ${x.price}억 · ${x.floor}층 · ${(+x.area).toFixed(1)}㎡</title></circle>`).join("");
+const jl=js.length?`<polyline points="${js.map(x=>`${XM(x.month)},${Y(x.median)}`).join(" ")}" fill="none" stroke="#3f6a9a" stroke-width="1.8" stroke-dasharray="5 4"/>${js.length>60?"":js.map(x=>`<circle cx="${XM(x.month)}" cy="${Y(x.median)}" r="2" fill="#3f6a9a"><title>${x.month} 전세 ${x.median}억</title></circle>`).join("")}`:"";
+const lastv=s.length?s[s.length-1].median:td[td.length-1].price,ly=Y(lastv);
+const area=s.length>1?`<polygon points="${XM(s[0].month)},${T+PH} ${pts} ${XM(s[s.length-1].month)},${T+PH}" fill="#efe4d0" opacity=".6"/>`:"";
+box.innerHTML=`<svg width="${W}" height="${H}">${g}${area}<polyline points="${pts}" fill="none" stroke="#7a5a35" stroke-width="2"/>${tdots}${dots}${jl}
+<rect x="${W-R+2}" y="${ly-9}" width="${R-4}" height="18" rx="3" fill="#7a5a35"/><text x="${W-R+8}" y="${ly+4}" style="fill:#fff;font-weight:700">${lastv.toFixed(1)}</text>${bars}${lab}</svg>`}
 function renderSenti(){const all=window.SENTI;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]];const el=$("#senti");if(!v)return;
 const k=v.label==="매수 우위"?"buy":v.label==="매도 우위"?"sell":"hold",g=v.signals||{},w=v.windows||{},m=v.monthly||[];
 const sg=x=>x==null?"-":(x>0?"+":"")+x.toFixed(1)+"%",fm=s=>s?s.replace("-",".").slice(2):"";

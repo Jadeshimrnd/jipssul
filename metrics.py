@@ -1,6 +1,6 @@
 # 제이드의 내집마련 - 화면용 지표 계산 (trades.db -> web_data/*.json)
 # 사용법: python metrics.py [YYYY-MM-DD]   (기준일 지정은 테스트용, 환경변수 JADE_REF_DATE도 가능)
-import os, sys, json, sqlite3, statistics, datetime
+import os, sys, re, json, glob, hashlib, sqlite3, statistics, datetime
 from collections import defaultdict
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +48,12 @@ for (sgg, umd, jb, nm, b), deals in cx.items():
                    for m, v in sorted(monthly.items())],
         "recent": [{"date": d, "price": round(a / 10000, 2), "area": ar, "floor": f}
                    for d, a, ar, f in reversed(deals[-5:])],
+        # 3개월·6개월 차트용 개별 거래 (최근 6개 완결 월 + 이번 달)
+        "trades6m": [{"date": d, "price": round(a / 10000, 2), "floor": f, "area": ar}
+                     for d, a, ar, f in deals if d[:7] >= ym_ago(6)],
+        # 대표 단지 후보: 거래 20건 이상 + 최근 6개월(이번 달 포함) 중 4개월 이상 거래
+        "rep": len(deals) >= 20 and change is not None
+               and sum(1 for i in range(6) if ym_ago(i) in monthly) >= 4,
     })
 
 ranked = sorted([c for c in complexes if c["change"] is not None and c["count"] >= 10],
@@ -180,8 +186,29 @@ if rent_rows:
     for c in complexes:
         c.setdefault("jeonse", None); c.setdefault("jeonse_ratio", None)
 
-json.dump(summary, open(os.path.join(OUT, "summary.json"), "w", encoding="utf-8"), ensure_ascii=False)
-json.dump(complexes, open(os.path.join(OUT, "complexes.json"), "w", encoding="utf-8"), ensure_ascii=False)
+# ---------- 출력: 가벼운 목록 + 단지별 상세 파일 ----------
+now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+summary["updated_at"] = now
+LIST_KEYS = ("id", "sgg", "dong", "name", "band", "price", "change", "count", "jeonse", "jeonse_ratio", "rep")
+DETAIL_KEYS = ("series", "jeonse_series", "recent", "trades6m")
+CDIR = os.path.join(OUT, "c"); os.makedirs(CDIR, exist_ok=True)
+for old in glob.glob(os.path.join(CDIR, "*.json")): os.remove(old)   # 지난 실행 파일 정리
+dump = lambda obj, path: json.dump(obj, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+light = []
+for c in complexes:
+    f = hashlib.sha1(c["id"].encode("utf-8")).hexdigest()[:12]
+    light.append({**{k: c.get(k) for k in LIST_KEYS}, "f": f})
+    dump({k: c.get(k) or [] for k in DETAIL_KEYS}, os.path.join(CDIR, f + ".json"))
+dump(summary, os.path.join(OUT, "summary.json"))
+dump(light, os.path.join(OUT, "complexes.json"))
+open(os.path.join(OUT, "version.txt"), "w").write(now)
+# index.html의 style.css / app.js 캐시 무효화 (?v=)
+ver = re.sub(r"\D", "", now)[:14]
+ip = os.path.join(BASE, "index.html")
+if os.path.exists(ip):
+    h = open(ip, encoding="utf-8").read()
+    h2 = re.sub(r'(href|src)="(style\.css|app\.js)(\?v=[^"]*)?"', lambda m: f'{m.group(1)}="{m.group(2)}?v={ver}"', h)
+    if h2 != h: open(ip, "w", encoding="utf-8").write(h2)
 print(f"단지(면적대) {len(complexes)}개 | 상승 {up} | 하락 {down}")
 print("상승률 상위 5:")
 for c in ranked[:5]:
