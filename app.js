@@ -8,7 +8,7 @@ function lastMonths(n){const d=new Date(window.UPDATED||Date.now()),o=[];for(let
 function isRep(c){if(c.count<20||c.change==null)return false;const m=new Set((c.series||[]).filter(s=>s.count>0).map(s=>s.month));return lastMonths(6).filter(x=>m.has(x)).length>=4}
 async function get(dir){const[a,b]=await Promise.all(["summary","complexes"].map(f=>fetch(`${dir}/${f}.json`,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()})));return[a,b]}
 async function init(){let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-window.UPDATED=sum.updated;ALL=cx.map(c=>({...c,rep:isRep(c)}));$("#updated").textContent="업데이트 "+sum.updated;
+window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;ALL=cx.map(c=>({...c,rep:isRep(c)}));$("#updated").textContent="업데이트 "+sum.updated;
 Object.keys(SGG).filter(k=>ALL.some(c=>c.sgg===k)).forEach(k=>$("#sgg").insertAdjacentHTML("beforeend",`<option value="${k}">${SGG[k]}</option>`));
 document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render()});
 $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
@@ -16,7 +16,7 @@ $("#rep").onchange=e=>{S.rep=e.target.checked;S.page=0;renderList()};
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;S.dir=S.sort===k?-S.dir:(k==="name"?1:-1);S.sort=k;renderList()});
 $("#prev").onclick=()=>{if(S.page>0){S.page--;renderList()}};$("#next").onclick=()=>{S.page++;renderList()};render()}
 const inRegion=c=>S.region==="all"||(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg));
-function render(){const r=ALL.filter(inRegion);$("#k-total").textContent=r.length.toLocaleString();
+function render(){renderSenti();const r=ALL.filter(inRegion);$("#k-total").textContent=r.length.toLocaleString();
 $("#k-up").textContent=r.filter(c=>c.change>0).length.toLocaleString();$("#k-down").textContent=r.filter(c=>c.change<0).length.toLocaleString();
 const reps=r.filter(c=>c.rep);$("#k-rep").textContent=reps.length;
 const top=[...reps].sort((a,b)=>b.change-a.change).slice(0,3);
@@ -49,4 +49,14 @@ const step=Math.ceil(n/6),lab=s.map((x,i)=>(i%step===0||i===n-1)?`<text x="${X(i
 const dots=s.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.median)}" r="2.5" fill="#fff" stroke="#7a5a35"><title>${x.month} ${x.median}억 (${x.count}건)</title></circle>`).join("");
 const ly=Y(v[n-1]);box.innerHTML=`<svg width="${W}" height="${H}">${g}<polygon points="${X(0)},${T+PH} ${pts} ${X(n-1)},${T+PH}" fill="#efe4d0" opacity=".6"/><polyline points="${pts}" fill="none" stroke="#7a5a35" stroke-width="2"/>${dots}
 <rect x="${W-R+2}" y="${ly-9}" width="${R-4}" height="18" rx="3" fill="#7a5a35"/><text x="${W-R+8}" y="${ly+4}" style="fill:#fff;font-weight:700">${v[n-1].toFixed(1)}</text>${bars}${lab}</svg>`}
+function renderSenti(){const all=window.SENTI;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]];const el=$("#senti");if(!v)return;
+const k=v.label==="매수 우위"?"buy":v.label==="매도 우위"?"sell":"hold",g=v.signals||{},w=v.windows||{},m=v.monthly||[];
+const sg=x=>x==null?"-":(x>0?"+":"")+x.toFixed(1)+"%",fm=s=>s?s.replace("-",".").slice(2):"";
+let sp="";if(m.length>1){const W=200,H=40,mx=Math.max(...m.map(x=>x.count),1),X=i=>4+i*(W-8)/(m.length-1),Y=c=>H-4-c/mx*(H-10);
+const pts=m.map((x,i)=>`${X(i)},${Y(x.count)}`).join(" ");sp=`<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polyline points="${pts}" fill="none" stroke="#8a6a43" stroke-width="1.6"/>${m.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.count)}" r="${i===m.length-1?2.6:1.4}" fill="#8a6a43"><title>${x.month} ${x.count.toLocaleString()}건</title></circle>`).join("")}</svg>`}
+el.innerHTML=`<div class="ch"><h3>지금, 시장의 마음</h3><span class="sb ${k}">${v.label}</span></div>
+<div class="gauge"><div class="gt"><i style="left:${Math.max(0,Math.min(100,v.score))}%"></i></div><b>${v.score}<small>/100</small></b></div>
+<div class="gl"><span>매도 우위</span><span>관망</span><span>매수 우위</span></div><p class="ss">${v.summary}</p>
+<div class="sigs"><div><small>거래량 (전년 동기)</small><b class="${cls(g.volume_change_pct)}">${sg(g.volume_change_pct)}</b></div><div><small>상승 단지 비중</small><b>${g.rising_share_pct==null?"-":g.rising_share_pct.toFixed(0)+"%"}</b></div><div><small>신고가 비중</small><b>${g.new_high_share_pct==null?"-":g.new_high_share_pct.toFixed(0)+"%"}</b></div></div>
+<div class="spw">${sp}<span class="muted sm2">월별 거래량 (최근 12개월)<br>비교: ${fm(w.recent&&w.recent[0])}~${fm(w.recent&&w.recent[1])} vs ${fm(w.prev&&w.prev[0])}~${fm(w.prev&&w.prev[1])} (작년 같은 기간)</span></div><p class="muted fn">※ 실거래는 계약 후 30일 안에 신고돼 이번 달은 제외했고, 지난달은 아직 일부 덜 집계됐을 수 있어요.</p>`}
 init();

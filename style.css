@@ -24,3 +24,10 @@ select{padding:7px;border:1px solid #ddd1bd;border-radius:6px;background:#fff}
 .big{font-size:36px;font-weight:700;margin:16px 0 6px}.big span{font-size:14px;margin-left:8px}.per button{border:0;background:none;padding:6px 12px;color:#6d6257;cursor:pointer;border-radius:5px}
 .per button.on{background:#ebdfc9;color:#2d2620;font-weight:700}.per{display:flex;align-items:center;margin-top:14px}.per .lg{margin-left:auto;font-size:11px;color:#8b7f72}
 svg text{font-size:10px;fill:#8b7f72}.detail h3{margin:26px 0 10px;font-size:15px}.foot{display:flex;justify-content:space-between;padding:18px 24px 30px;font-size:12px;color:#7b6f63}
+.sb{border-radius:12px;padding:3px 11px;font-size:12px;font-weight:700;color:#fff}.sb.buy{background:#b8473a}.sb.sell{background:#3f6a9a}.sb.hold{background:#8f877d}
+.gauge{display:flex;align-items:center;gap:14px}.gt{flex:1;height:8px;border-radius:4px;position:relative;background:linear-gradient(90deg,#3f6a9a,#c9c0b3 50%,#b8473a)}
+.gt i{position:absolute;top:-4px;width:4px;height:16px;margin-left:-2px;background:#2d2620;border-radius:2px}.gauge b{font-size:24px}.gauge small{font-size:11px;color:#8b7f72;font-weight:400}
+.gl{display:flex;justify-content:space-between;font-size:10px;color:#9a8e80;margin:2px 60px 0 0}.ss{margin:12px 0;line-height:1.5}
+.sigs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sigs>div{background:#f4ecdd;border-radius:6px;padding:8px 10px}.sigs small{display:block;font-size:11px;color:#8b7f72}.sigs b{font-size:17px}
+.spw{display:flex;align-items:center;gap:12px;margin-top:10px}.sm2{font-size:11px;line-height:1.5}
+.fn{font-size:10.5px;margin:8px 0 0}
