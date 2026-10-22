@@ -189,18 +189,27 @@ if rent_rows:
 # ---------- 출력: 가벼운 목록 + 단지별 상세 파일 ----------
 now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
 summary["updated_at"] = now
+try:
+    from regions import REGIONS
+except ImportError:
+    REGIONS = {}
+have = {c["sgg"] for c in complexes}
+summary["regions"] = {k: v for k, v in REGIONS.items() if k in have}
+for k in have - set(REGIONS): summary["regions"][k] = k
 LIST_KEYS = ("id", "sgg", "dong", "name", "band", "price", "change", "count", "jeonse", "jeonse_ratio", "rep")
 DETAIL_KEYS = ("series", "jeonse_series", "recent", "trades6m")
 CDIR = os.path.join(OUT, "c"); os.makedirs(CDIR, exist_ok=True)
 for old in glob.glob(os.path.join(CDIR, "*.json")): os.remove(old)   # 지난 실행 파일 정리
 dump = lambda obj, path: json.dump(obj, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+LIST_COLS = [k for k in LIST_KEYS if k != "id"] + ["f"]   # id 대신 f 사용, 열 압축 형식
 light = []
 for c in complexes:
     f = hashlib.sha1(c["id"].encode("utf-8")).hexdigest()[:12]
-    light.append({**{k: c.get(k) for k in LIST_KEYS}, "f": f})
+    c["f"] = f
+    light.append([c.get(k) for k in LIST_COLS])
     dump({k: c.get(k) or [] for k in DETAIL_KEYS}, os.path.join(CDIR, f + ".json"))
 dump(summary, os.path.join(OUT, "summary.json"))
-dump(light, os.path.join(OUT, "complexes.json"))
+dump({"cols": LIST_COLS, "rows": light}, os.path.join(OUT, "complexes.json"))
 open(os.path.join(OUT, "version.txt"), "w").write(now)
 # index.html의 style.css / app.js 캐시 무효화 (?v=)
 ver = re.sub(r"\D", "", now)[:14]

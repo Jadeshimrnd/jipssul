@@ -1,5 +1,5 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>제이드의 내집마련</title><link rel="stylesheet" href="style.css?v=20261022115416"><link rel="manifest" href="manifest.json">
+<title>제이드의 내집마련</title><link rel="stylesheet" href="style.css?v=20261022135715"><link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7a5a36">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7,7 +7,7 @@
 <script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script>
 </head><body>
 <header class="top"><div class="wrap hd"><div class="logo"><span class="ic">▦</span>제이드의 내집마련</div>
-<nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a></nav>
+<nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a><a data-r="fav">★ 관심지역</a></nav>
 <div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated"></span></div></div></header>
 <main class="wrap">
 <section class="hero"><div class="eyebrow">SEOUL METROPOLITAN AREA</div><h1>R=VD 구체적으로 상상할수록 현실에 가까워진다</h1><p>지역별 가격 동향과 서울 집값이 경기도 집값에 미치는 영향을 파악하기 위한 트래킹 사이트 개발 단계 사이트입니다.</p></section>
@@ -22,10 +22,14 @@
 <section class="main">
 <div class="card list"><div class="ch"><h3>마켓 탐색 <span id="cnt" class="muted"></span></h3></div>
 <div class="filters"><input id="q" placeholder="⌕  단지명, 지역으로 검색"><select id="sgg"><option value="">모든 시·구</option></select>
-<label><input type="checkbox" id="rep"> 대표 단지만</label></div>
+<label><input type="checkbox" id="rep"> 대표 단지만</label><button id="favbtn" class="favbtn">★ 관심지역 설정 <span id="favn">0/5</span></button></div>
+<div id="favbar" class="favbar"></div>
 <div class="tblw"><table class="tbl"><thead><tr><th data-s="name">지역 / 단지 · 평수</th><th data-s="price" class="r">가격 · 억</th><th data-s="change" class="r">등락률</th><th data-s="jeonse_ratio" class="r">전세가율</th></tr></thead><tbody id="rows"></tbody></table></div>
 <div class="pager"><span id="pinfo"></span><span><button id="prev">‹</button><button id="next">›</button></span></div></div>
 <div class="card detail" id="detail"></div></section>
 </main>
+<div id="favpanel" class="favpanel"><div id="favdim" class="favdim"></div><div class="favbox"><div class="ch"><h3>관심지역 고르기</h3><span id="favsel" class="tag"></span><button id="favclose" class="favx" aria-label="닫기">✕</button></div>
+<p class="muted sm">시·구를 최대 5곳까지 담을 수 있어요. 이 기기에 저장돼요.</p><input id="favq" placeholder="⌕  지역 이름으로 찾기 (예: 안양, 분당)"><div id="favlist" class="favlist"></div></div></div>
+<div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>제이드의 내집마련</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가</span></footer>
-<script src="app.js?v=20261022115416"></script></body></html>
+<script src="app.js?v=20261022135715"></script></body></html>

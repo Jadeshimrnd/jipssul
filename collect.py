@@ -2,6 +2,7 @@
 # 사용법: python collect.py            -> 이번 달 + 지난달 갱신 (매일 실행용)
 #         python collect.py 202401 202609 -> 기간 전체 백필
 #         python collect.py 202401 202610 --only rent  -> 전월세만 (또는 --only trade)
+#         python collect.py 202310 202610 --regions new -> 처음 12개 지역 외 새 지역만
 import os, sys, sqlite3, time, datetime
 import xml.etree.ElementTree as ET
 import requests
@@ -12,13 +13,8 @@ URL = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrad
 RENT_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
 DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trades.db")
 
-# 관심 지역 시군구 코드 (필요한 만큼 추가)
-REGIONS = {
-    "11440": "서울 마포구", "11170": "서울 용산구", "11110": "서울 종로구",
-    "11620": "서울 관악구", "11140": "서울 중구",  "11305": "서울 강북구",
-    "41590": "경기 화성시", "41310": "경기 구리시", "41117": "경기 수원시 영통구",
-    "41465": "경기 용인시 수지구", "28185": "인천 연수구", "28237": "인천 부평구",
-}
+# 수집 지역 목록은 regions.py 에 있음 (서울 25구 + 경기 전체 + 인천 전체)
+from regions import REGIONS, ORIGINAL
 
 def t(item, tag):
     v = item.findtext(tag)
@@ -108,6 +104,15 @@ if __name__ == "__main__":
         only = args[i + 1] if i + 1 < len(args) else ""
         del args[i:i + 2]
         if only not in ("trade", "rent"): sys.exit("--only 는 trade 또는 rent 만 가능해요.")
+    targets = REGIONS
+    if "--regions" in args:
+        i = args.index("--regions")
+        which = args[i + 1] if i + 1 < len(args) else ""
+        del args[i:i + 2]
+        if which == "new": targets = {k: v for k, v in REGIONS.items() if k not in ORIGINAL}
+        elif which == "old": targets = {k: v for k, v in REGIONS.items() if k in ORIGINAL}
+        elif which != "all": sys.exit("--regions 는 new / old / all 중 하나예요.")
+    print(f"대상 지역: {len(targets)}곳")
     print(f"키 확인: 길이 {len(API_KEY)}자, 앞 4자리 {API_KEY[:4]}")
     today = datetime.date.today()
     if len(args) == 2:
@@ -116,7 +121,7 @@ if __name__ == "__main__":
         prev = (today.replace(day=1) - datetime.timedelta(days=1))
         yms = [prev.strftime("%Y%m"), today.strftime("%Y%m")]
     con = sqlite3.connect(DB); init_db(con); init_rent(con)
-    for lawd, name in REGIONS.items():
+    for lawd, name in targets.items():
         for ym in yms:
             if only in ("all", "trade"):
                 items = fetch(lawd, ym); save(con, items); con.commit()

@@ -1,4 +1,4 @@
-const SGG={"11440":"서울 마포구","11170":"서울 용산구","11110":"서울 종로구","11620":"서울 관악구","11140":"서울 중구","11305":"서울 강북구","41590":"경기 화성시","41310":"경기 구리시","41117":"경기 수원시 영통구","41465":"경기 용인시 수지구","28185":"인천 연수구","28237":"인천 부평구"};
+let SGG={"11440":"서울 마포구","11170":"서울 용산구","11110":"서울 종로구","11620":"서울 관악구","11140":"서울 중구","11305":"서울 강북구","41590":"경기 화성시","41310":"경기 구리시","41117":"경기 수원시 영통구","41465":"경기 용인시 수지구","28185":"인천 연수구","28237":"인천 부평구"};
 const $=s=>document.querySelector(s);let ALL=[],S={region:"all",q:"",sgg:"",rep:false,sort:"change",dir:-1,page:0,sel:null,per:12};
 const band=b=>b==="~50"?"~50㎡":b==="110+"?"110㎡+":b+"㎡";
 const pct=v=>v==null?"-":(v>0?"+":"")+v.toFixed(1)+"%";const cls=v=>v>0?"up":v<0?"down":"";
@@ -9,14 +9,14 @@ function isRep(c){if(c.count<20||c.change==null)return false;const m=new Set((c.
 const J=u=>fetch(u,{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()});
 async function get(dir){const a=await J(`${dir}/summary.json?t=${Date.now()}`);const v=a.updated_at||a.updated||"";const b=await fetch(`${dir}/complexes.json?v=${encodeURIComponent(v)}`).then(r=>{if(!r.ok)throw 0;return r.json()});window.DIR=dir;window.VER=v;return[a,b]}
 async function init(){let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;ALL=cx.map(c=>({...c,rep:c.rep!=null?c.rep:isRep(c)}));$("#updated").textContent="업데이트 "+sum.updated;
-Object.keys(SGG).filter(k=>ALL.some(c=>c.sgg===k)).forEach(k=>$("#sgg").insertAdjacentHTML("beforeend",`<option value="${k}">${SGG[k]}</option>`));
-document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render()});
+window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
+fillSgg();renderFavBar();$("#favbtn").onclick=()=>openFav();$("#favclose").onclick=closeFav;$("#favdim").onclick=closeFav;$("#favq").oninput=renderFavPick;
+document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render();if(S.region==="fav"&&!FAV.length)openFav()});
 $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
 $("#rep").onchange=e=>{S.rep=e.target.checked;S.page=0;renderList()};
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;S.dir=S.sort===k?-S.dir:(k==="name"?1:-1);S.sort=k;renderList()});
 $("#prev").onclick=()=>{if(S.page>0){S.page--;renderList()}};$("#next").onclick=()=>{S.page++;renderList()};render()}
-const inRegion=c=>S.region==="all"||(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg));
+const inRegion=c=>S.region==="all"||(S.region==="fav"?FAV.includes(c.sgg):false)||S.region!=="fav"&&(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg));
 function render(){renderSenti();renderRent();const r=ALL.filter(inRegion);$("#k-total").textContent=r.length.toLocaleString();
 $("#k-up").textContent=r.filter(c=>c.change>0).length.toLocaleString();$("#k-down").textContent=r.filter(c=>c.change<0).length.toLocaleString();
 const reps=r.filter(c=>c.rep);$("#k-rep").textContent=reps.length;
@@ -70,7 +70,7 @@ const lastv=s.length?s[s.length-1].median:td[td.length-1].price,ly=Y(lastv);
 const area=s.length>1?`<polygon points="${XM(s[0].month)},${T+PH} ${pts} ${XM(s[s.length-1].month)},${T+PH}" fill="#efe4d0" opacity=".6"/>`:"";
 box.innerHTML=`<svg width="${W}" height="${H}">${g}${area}<polyline points="${pts}" fill="none" stroke="#7a5a35" stroke-width="2"/>${tdots}${dots}${jl}
 <rect x="${W-R+2}" y="${ly-9}" width="${R-4}" height="18" rx="3" fill="#7a5a35"/><text x="${W-R+8}" y="${ly+4}" style="fill:#fff;font-weight:700">${lastv.toFixed(1)}</text>${bars}${lab}</svg>`}
-function renderSenti(){const all=window.SENTI;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]];const el=$("#senti");if(!v)return;
+function renderSenti(){const all=window.SENTI;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]||"all"];const el=$("#senti");if(!v)return;
 const k=v.label==="매수 우위"?"buy":v.label==="매도 우위"?"sell":"hold",g=v.signals||{},w=v.windows||{},m=v.monthly||[];
 const sg=x=>x==null?"-":(x>0?"+":"")+x.toFixed(1)+"%",fm=s=>s?s.replace("-",".").slice(2):"";
 let sp="";if(m.length>1){const W=200,H=40,mx=Math.max(...m.map(x=>x.count),1),X=i=>4+i*(W-8)/(m.length-1),Y=c=>H-4-c/mx*(H-10);
@@ -80,7 +80,7 @@ el.innerHTML=`<div class="ch"><h3>지금, 시장의 마음</h3><span class="sb $
 <div class="gl"><span>매도 우위</span><span>관망</span><span>매수 우위</span></div><p class="ss">${v.summary}</p>
 <div class="sigs"><div><small>거래량 (전년 동기)</small><b class="${cls(g.volume_change_pct)}">${sg(g.volume_change_pct)}</b></div><div><small>상승 단지 비중</small><b>${g.rising_share_pct==null?"-":g.rising_share_pct.toFixed(0)+"%"}</b></div><div><small>신고가 비중</small><b>${g.new_high_share_pct==null?"-":g.new_high_share_pct.toFixed(0)+"%"}</b></div></div>
 <div class="spw">${sp}<span class="muted sm2">월별 거래량 (최근 12개월)<br>비교: ${fm(w.recent&&w.recent[0])}~${fm(w.recent&&w.recent[1])} vs ${fm(w.prev&&w.prev[0])}~${fm(w.prev&&w.prev[1])} (작년 같은 기간)</span></div><p class="muted fn">※ 실거래는 계약 후 30일 안에 신고돼 이번 달은 제외했고, 지난달은 아직 일부 덜 집계됐을 수 있어요.</p>`}
-function renderRent(){const all=window.RENT;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]];const el=$("#rentc");if(!v)return;
+function renderRent(){const all=window.RENT;const v=all&&all[{all:"all","11":"seoul",ext:"gyeonggi_incheon"}[S.region]||"all"];const el=$("#rentc");if(!v)return;
 const sg=x=>x==null?"-":(x>0?"+":"")+x.toFixed(1)+"%",pp=x=>x==null?"-":(x>0?"+":"")+x.toFixed(1)+"%p",m=v.monthly||[],w=v.windows||{},fm=s=>s?s.replace("-",".").slice(2):"";
 let sp="";if(m.length>1){const W=200,H=40,mx=Math.max(...m.map(x=>Math.max(x.jeonse,x.wolse)),1),X=i=>4+i*(W-8)/(m.length-1),Y=c=>H-4-c/mx*(H-10);
 const ln=(k,c,da)=>`<polyline points="${m.map((x,i)=>`${X(i)},${Y(x[k])}`).join(" ")}" fill="none" stroke="${c}" stroke-width="1.6" ${da?'stroke-dasharray="4 3"':""}/>`;
@@ -91,3 +91,24 @@ el.innerHTML=`<div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag
 <p class="ss">${v.summary}</p><div class="spw">${sp}<span class="muted sm2"><span class="jl2">— 전세</span> <span class="jl">- - 월세</span> 월별 건수 (최근 12개월)<br>비교: ${fm(w.recent&&w.recent[0])}~${fm(w.recent&&w.recent[1])} vs ${fm(w.prev&&w.prev[0])}~${fm(w.prev&&w.prev[1])} (작년 같은 기간)</span></div>
 <p class="muted fn">※ 실거래는 계약 후 30일 안에 신고돼 이번 달은 제외했고, 지난달은 아직 일부 덜 집계됐을 수 있어요.</p>`}
 init();
+
+// ---------- 관심지역 (최대 5곳, 이 기기에 저장) ----------
+let FAV=[];try{FAV=JSON.parse(localStorage.getItem("jade_fav")||"[]")}catch(e){FAV=[]}
+function saveFav(){try{localStorage.setItem("jade_fav",JSON.stringify(FAV))}catch(e){}}
+const SIDO=[["서울","11"],["경기","41"],["인천","28"]];
+const haveSgg=()=>{const h=new Set(ALL.map(c=>c.sgg));return Object.keys(SGG).filter(k=>h.has(k))};
+function fillSgg(){const el=$("#sgg"),v=el.value,ks=haveSgg();el.innerHTML='<option value="">모든 시·구 ('+ks.length+')</option>'+
+SIDO.map(([n,p])=>{const g=ks.filter(k=>k.startsWith(p)).sort((a,b)=>gu(a).localeCompare(gu(b),"ko"));return g.length?`<optgroup label="${n}">${g.map(k=>`<option value="${k}">${FAV.includes(k)?"★ ":""}${gu(k)}</option>`).join("")}</optgroup>`:""}).join("");el.value=v}
+function toast(m){let t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
+function toggleFav(k){const i=FAV.indexOf(k);if(i>=0)FAV.splice(i,1);else{if(FAV.length>=5){toast("관심지역은 5곳까지 담을 수 있어요. 하나를 빼고 다시 골라주세요.");return}FAV.push(k)}
+saveFav();renderFavBar();renderFavPick();fillSgg();if(S.region==="fav"){S.page=0;render()}}
+function renderFavBar(){$("#favn").textContent=FAV.length+"/5";const t=document.querySelector('#tabs a[data-r="fav"]');if(t)t.textContent="★ 관심지역"+(FAV.length?" "+FAV.length:"");
+$("#favbar").innerHTML=FAV.length?FAV.map(k=>`<span class="fchip on" data-k="${k}">★ ${SGG[k]}<b>×</b></span>`).join(""):'<span class="muted sm">★ 관심지역을 담으면 위쪽 \'관심지역\' 탭에서 그 지역만 모아 볼 수 있어요.</span>';
+document.querySelectorAll("#favbar .fchip").forEach(e=>e.onclick=()=>toggleFav(e.dataset.k))}
+function renderFavPick(){const q=($("#favq").value||"").trim(),ks=haveSgg().filter(k=>!q||SGG[k].includes(q));
+$("#favsel").textContent=`선택 ${FAV.length}/5`;
+$("#favlist").innerHTML=SIDO.map(([n,p])=>{const g=ks.filter(k=>k.startsWith(p)).sort((a,b)=>gu(a).localeCompare(gu(b),"ko"));if(!g.length)return"";
+return `<h5>${n} <span class="muted">${g.length}</span></h5><div class="chips">${g.map(k=>`<button class="fchip${FAV.includes(k)?" on":""}" data-k="${k}">${FAV.includes(k)?"★ ":""}${gu(k)}<i>${ALL.filter(c=>c.sgg===k).length}</i></button>`).join("")}</div>`}).join("")||'<p class="muted">검색 결과가 없어요.</p>';
+document.querySelectorAll("#favlist .fchip").forEach(e=>e.onclick=()=>toggleFav(e.dataset.k))}
+function openFav(){$("#favq").value="";renderFavPick();$("#favpanel").classList.add("on");document.body.classList.add("noscroll")}
+function closeFav(){$("#favpanel").classList.remove("on");document.body.classList.remove("noscroll")}
