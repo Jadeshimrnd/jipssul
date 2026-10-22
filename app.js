@@ -32,7 +32,8 @@ $("#rows").innerHTML=p.map(c=>`<tr data-id="${c.id}" class="${c.id===S.sel?"sel"
 document.querySelectorAll("#rows tr").forEach(t=>t.onclick=()=>select(t.dataset.id));
 $("#pinfo").textContent=r.length?`${S.page*20+1}–${S.page*20+p.length} / ${r.length}개`:"결과 없음";
 document.querySelectorAll("th[data-s]").forEach(th=>{th.textContent=th.textContent.replace(/ [↑↓]$/,"")+(th.dataset.s===S.sort?(S.dir>0?" ↑":" ↓"):"")})}
-function select(id){S.sel=id;renderList();renderDetail()}
+function select(id){S.sel=id;renderList();renderDetail();if(innerWidth<=720)$("#detail").scrollIntoView({behavior:"smooth",block:"start"})}
+let RZ,RW=innerWidth;addEventListener("resize",()=>{if(innerWidth===RW)return;RW=innerWidth;clearTimeout(RZ);RZ=setTimeout(()=>renderDetail(),200)});
 const PERS=[[3,"3개월"],[6,"6개월"],[12,"1년"],[24,"2년"],[36,"3년"],[60,"5년"],[120,"10년"]];let DC={},DREQ=0;
 async function loadDetail(c){if(!c.f)return c;if(DC[c.f])return DC[c.f];const r=await fetch(`${window.DIR}/c/${c.f}.json?v=${encodeURIComponent(window.VER)}`);if(!r.ok)throw new Error("detail "+r.status);return DC[c.f]={...c,...await r.json()}}
 async function renderDetail(){const c0=ALL.find(x=>x.id===S.sel),el=$("#detail");if(!c0){el.innerHTML='<p class="muted">단지를 선택하세요.</p>';return}
@@ -43,7 +44,7 @@ const avail=PERS.map(([n],k)=>k<3||first<lastMonths(PERS[k-1][0]).pop());
 el.innerHTML=`<div class="loc">${SGG[c.sgg]} / ${c.dong}</div><h2>${c.name}</h2><div class="muted">전용 ${band(c.band)} · 누적 ${c.count}건${c.rep?'<span class="chip">★ 대표 단지 후보</span>':""}</div>
 <div class="big">${eok(c.price)}<span class="${cls(c.change)}">${pct(c.change)}</span><span class="muted">최근 3개월 vs 직전 3개월 중위가</span></div>
 ${c.jeonse!=null||c.jeonse_ratio!=null?`<div class="jst"><div><small>전세 중위가</small><b>${eok(c.jeonse)}</b></div><div><small>전세가율</small><b>${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(1)+"%"}</b></div><span class="muted">최근 6개 완결 월 기준</span></div>`:""}
-<div class="per">${PERS.map(([n,l],k)=>`<button data-n="${n}" class="${S.per===n?"on":""}" ${avail[k]?"":"disabled title='이 기간까지의 거래 기록이 없어요'"}>${l}</button>`).join("")}<span class="lg">— 매매 중위가${S.per<=6?' &nbsp;<span class="tdot">●</span> 개별 거래':""}${(c.jeonse_series||[]).length?'&nbsp; <span class="jl">- - 전세 중위가</span>':""} &nbsp; ▮ 거래량</span></div>
+<div class="per"><span class="pb">${PERS.map(([n,l],k)=>`<button data-n="${n}" class="${S.per===n?"on":""}" ${avail[k]?"":"disabled title='이 기간까지의 거래 기록이 없어요'"}>${l}</button>`).join("")}</span><span class="lg">— 매매 중위가${S.per<=6?' &nbsp;<span class="tdot">●</span> 개별 거래':""}${(c.jeonse_series||[]).length?'&nbsp; <span class="jl">- - 전세 중위가</span>':""} &nbsp; ▮ 거래량</span></div>
 <div id="chart"></div><h3>최근 거래 내역 <span class="muted" style="font-weight:400;font-size:12px">${rec.length}건</span></h3>
 <table class="tbl"><thead><tr><th>계약일</th><th>전용면적</th><th>층</th><th class="r">거래금액</th></tr></thead><tbody>${rec.map(t=>`<tr><td>${t.date.replace(/-/g,".")}</td><td>${(+t.area).toFixed(2)}㎡</td><td>${t.floor}층</td><td class="r"><b>${eok(t.price)}</b></td></tr>`).join("")||'<tr><td colspan=4 class="muted">거래 없음</td></tr>'}</tbody></table>`;
 el.querySelectorAll(".per button").forEach(b=>b.onclick=()=>{if(b.disabled)return;S.per=+b.dataset.n;renderDetail()});chart(c)}
