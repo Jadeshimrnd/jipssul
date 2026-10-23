@@ -1,37 +1,88 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>제이드의 내집마련</title><link rel="stylesheet" href="style.css?v=20261022161415"><link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7a5a36">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>제이드의 내집마련</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css?v=20261023233600"><link rel="manifest" href="manifest.json">
+<meta name="theme-color" id="meta-theme" content="#3182F6">
+<link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="제이드홈">
-<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script>
+<script>
+(function(){try{var t=localStorage.getItem("jade_theme");if(t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)){if(t==="dark"){document.documentElement.dataset.theme="dark";var m=document.getElementById("meta-theme");if(m)m.content="#0B0F19"}}}catch(e){}})();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+</script>
 </head><body>
-<header class="top"><div class="wrap hd"><div class="logo"><span class="ic">▦</span>제이드의 내집마련</div>
+<header class="top"><div class="wrap hd"><div class="logo"><span class="ic">▦</span><span class="logo-txt">제이드의 내집마련</span></div>
 <nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a><a data-r="fav">★ 관심지역</a></nav>
-<div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated"></span></div></div></header>
+<div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated" class="upd-date"></span><button id="theme-toggle" class="theme-btn" type="button" aria-label="테마 전환">🌙 다크</button></div></div></header>
 <main class="wrap">
-<section class="hero"><div class="eyebrow">SEOUL METROPOLITAN AREA</div><h1>R=VD 구체적으로 상상할수록 현실에 가까워진다</h1><p>지역별 가격 동향과 서울 집값이 경기도 집값에 미치는 영향을 파악하기 위한 트래킹 사이트 개발 단계 사이트입니다.</p></section>
-<section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="아파트 검색 · 단지명, 동, 지역 (서울·경기·인천)" aria-label="아파트 검색" role="combobox" aria-expanded="false" aria-controls="gres"><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
-<section class="card kpis"><div><h4>조회 단지</h4><b id="k-total">-</b><small>개</small><p>단지·면적대 기준</p></div>
-<div><h4>상승 단지</h4><b id="k-up" class="up">-</b><small>개</small><p>최근 3개월 vs 직전 3개월</p></div>
-<div><h4>하락 단지</h4><b id="k-down" class="down">-</b><small>개</small><p>최근 3개월 vs 직전 3개월</p></div>
-<div><h4>대표 단지 후보</h4><b id="k-rep">-</b><small>개</small><p>거래 20건↑·최근 꾸준히 거래</p></div></section>
+<div class="live-ticker" id="live-ticker" role="region" aria-label="실시간 커뮤니티 라운지 티커">
+  <span class="lt-badge"><span class="lt-dot"></span>🔥 실시간 라운지</span>
+  <button type="button" class="lt-item" id="lt-item"></button>
+  <div class="lt-ctrl">
+    <button type="button" class="lt-nav" id="lt-prev" aria-label="이전 토픽">‹</button>
+    <span class="lt-idx" id="lt-idx">1/3</span>
+    <button type="button" class="lt-nav" id="lt-next" aria-label="다음 토픽">›</button>
+    <button type="button" class="lt-go" id="lt-go">💬 라운지 바로가기</button>
+  </div>
+</div>
+<section class="hero"><div class="eyebrow"><span class="edot"></span>SEOUL METROPOLITAN AREA · REAL-TIME TRACKER</div><h1>R=VD 구체적으로 상상할수록 현실에 가까워진다</h1><p>지역별 가격 동향과 서울 집값이 경기도 집값에 미치는 영향을 파악하기 위한 트래킹 사이트 개발 단계 사이트입니다.</p></section>
+<section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="아파트 검색 · 단지명, 동, 지역 (서울·경기·인천)" aria-label="아파트 검색" role="combobox" aria-expanded="false" aria-controls="gres"><span class="gskbd">/ 검색</span><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
+<section class="card kpis"><div class="kpi-card"><div class="kpi-top"><h4>조회 단지</h4><span class="kpi-ic">🏢</span></div><div class="kpi-val"><b id="k-total">-</b><small>개</small></div><p>단지·면적대 기준</p></div>
+<div class="kpi-card up-card"><div class="kpi-top"><h4>상승 단지</h4><span class="kpi-ic up">▲</span></div><div class="kpi-val"><b id="k-up" class="up">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
+<div class="kpi-card down-card"><div class="kpi-top"><h4>하락 단지</h4><span class="kpi-ic down">▼</span></div><div class="kpi-val"><b id="k-down" class="down">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
+<div class="kpi-card rep-card"><div class="kpi-top"><h4>대표 단지 후보</h4><span class="kpi-ic gold">★</span></div><div class="kpi-val"><b id="k-rep">-</b><small>개</small></div><p>거래 20건↑·최근 꾸준히 거래</p></div></section>
 <section class="two"><div class="card" id="senti"><div class="ch"><h3>지금, 시장의 마음</h3><span class="tag">준비 중</span></div><p class="muted">시장 심리 요약은 준비 중이에요.</p></div>
 <div class="card" id="rentc"><div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag">준비 중</span></div><p class="muted">전월세 실거래가 연동 후 표시돼요.</p></div></section>
-<section class="card"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
+<section class="card lounge-sec" id="lounge-sec">
+  <div class="lounge-head">
+    <div class="lounge-title-wrap">
+      <div class="lounge-eyebrow"><span class="lt-dot"></span>COMMUNITY BALANCE LOUNGE · 실시간 민심 비교</div>
+      <h3>⚡ 이번 주 서울 vs 경기 밸런스 라운지</h3>
+      <p class="muted lounge-sub">같은 예산·다른 선택! 서울 집값 흐름과 경기 핵심지 키맞추기 체감을 함께 비교해보세요</p>
+    </div>
+    <div class="lounge-tabs" id="lounge-tabs" role="tablist" aria-label="밸런스 매치 선택"></div>
+  </div>
+  <div class="lounge-grid">
+    <div class="vs-arena" id="vs-arena"></div>
+    <div class="lounge-chat" id="lounge-chat"></div>
+  </div>
+</section>
+<section class="card" id="movers-sec"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
 <p class="muted sm">거래 20건 이상이고 최근 6개월 중 4개월 이상 거래된 단지 중, 마켓 탐색에서 고른 기간의 양쪽 구간에 거래가 충분한(7·30일 2건, 그 외 3건 이상) 단지만 순위에 포함해요.</p></section>
 <section class="main">
-<div class="card list"><div class="ch"><h3>마켓 탐색 <span id="cnt" class="muted"></span></h3></div>
+<div class="card list" id="list-sec"><div class="ch"><h3>마켓 탐색 <span id="cnt" class="muted"></span></h3></div>
 <div class="filters"><input id="q" placeholder="목록 안에서 거르기" aria-label="목록 필터"><select id="sgg"><option value="">모든 시·구</option></select>
 <label><input type="checkbox" id="rep"> 대표 단지만</label><button id="favbtn" class="favbtn">★ 관심지역 설정 <span id="favn">0/5</span></button></div>
 <div id="favbar" class="favbar"></div>
 <div class="pdw"><div id="pdb" class="pdb" role="group" aria-label="기간"></div><p id="pdcap" class="muted pdcap"></p></div>
 <div class="tblw"><table class="tbl"><thead><tr><th data-s="name">지역 / 단지 · 평수</th><th data-s="pp" class="r">가격 · 억</th><th data-s="pc" class="r">등락률</th><th data-s="jeonse_ratio" class="r">전세가율</th></tr></thead><tbody id="rows"></tbody></table></div>
-<div class="pager"><span id="pinfo"></span><span><button id="prev">‹</button><button id="next">›</button></span></div></div>
+<div class="pager"><span id="pinfo"></span><span><button id="prev" aria-label="이전 페이지">‹</button><button id="next" aria-label="다음 페이지">›</button></span></div></div>
 <div class="card detail" id="detail"></div></section>
 </main>
 <div id="favpanel" class="favpanel"><div id="favdim" class="favdim"></div><div class="favbox"><div class="ch"><h3>관심지역 고르기</h3><span id="favsel" class="tag"></span><button id="favclose" class="favx" aria-label="닫기">✕</button></div>
 <p class="muted sm">시·구를 최대 5곳까지 담을 수 있어요. 이 기기에 저장돼요.</p><input id="favq" placeholder="⌕  지역 이름으로 찾기 (예: 안양, 분당)"><div id="favlist" class="favlist"></div></div></div>
+<div id="report-modal" class="rmodal" aria-hidden="true">
+  <div id="rdim" class="favdim"></div>
+  <div class="rbox" role="dialog" aria-labelledby="rtitle">
+    <div class="ch">
+      <h3 id="rtitle">👑 제이드홈 프리미엄 의사결정 라운지</h3>
+      <button type="button" id="rclose" class="favx" aria-label="닫기">✕</button>
+    </div>
+    <div class="rtabs" id="rtabs">
+      <button type="button" data-m="report" class="on">📊 1:1 매수 비교 리포트 <small>얼리버드 19,000원</small></button>
+      <button type="button" data-m="pro">🔔 PRO 실시간 시그널 알림 <small>첫달 무료 · 월 4,900원</small></button>
+    </div>
+    <div id="rbody" class="rbody"></div>
+  </div>
+</div>
+<nav id="bnav" class="bnav" aria-label="모바일 하단 앱 메뉴">
+  <button type="button" data-nav="top" class="bnav-btn on"><span class="bi">🏠</span><span>홈·시황</span></button>
+  <button type="button" data-nav="list" class="bnav-btn"><span class="bi">🔍</span><span>단지탐색</span></button>
+  <button type="button" data-nav="lounge" class="bnav-btn"><span class="bi">💬</span><span>라운지</span></button>
+  <button type="button" data-nav="fav" class="bnav-btn"><span class="bi">⭐</span><span>관심지역</span></button>
+  <button type="button" data-nav="pro" class="bnav-btn pro"><span class="bi">👑</span><span>비교리포트</span></button>
+</nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>제이드의 내집마련</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가</span></footer>
-<script src="app.js?v=20261022161415"></script></body></html>
+<script src="app.js?v=20261023233600"></script></body></html>
