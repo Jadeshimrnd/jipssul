@@ -30,6 +30,7 @@ async function init(){
   const tb=$("#theme-toggle");if(tb)tb.onclick=toggleTheme;
   initTicker();
   initLounge();
+  initCommunityBoard();
   initReportModal();
   initBottomNav();
   let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
@@ -221,8 +222,11 @@ el.innerHTML=`<div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag
 
 // ---------- PHASE 2: 1. 상단 실시간 한줄 수다 티커 바 ----------
 const TICKER_ITEMS=[
+  {tag:"[핫토픽 🔥]",text:"자금 부족할수록 징검다리 지금 등기 vs 전세 연장 후 관망, 실거주자 선택은?",meta:"(댓글 38개) →",target:"#community-board",post:"p1"},
   {tag:"[밸런스 투표]",text:"9억 예산 실거주: 마포·성동 구축 59㎡ vs 분당·수지 준신축 84㎡",meta:"(222명 투표 중) →",target:"#lounge-sec",match:"m1"},
-  {tag:"[단지 팩트체크]",text:"전세가율 65% 돌파 단지들, 지금 갭보다 실거주 진입 타이밍일까요?",meta:"(실시간 톡 28) →",target:"#detail"},
+  {tag:"[입지 빅매치]",text:"광명 철산역 대장 vs 광명뉴타운 신축 vs 강동·미사 84㎡ 실거주 가성비 비교",meta:"(댓글 34개) →",target:"#community-board",post:"p2"},
+  {tag:"[현장 팩트체크]",text:"신분당선 수지(성복·풍덕천) & 수원 화서역 스타필드 브릿지 도보 임장 체감기",meta:"(댓글 29개) →",target:"#community-board",post:"p4"},
+  {tag:"[정책·규제]",text:"토허제 해제 이후 잠실·대치·삼성 호가 흐름과 인접 비규제 키맞추기 시차 분석",meta:"(댓글 31개) →",target:"#community-board",post:"p6"},
   {tag:"[서울→경기 시그널]",text:"서울 상급지 숨고르기 속 안양 평촌·수원 영통·수지 84㎡ 거래량 반등",meta:"(키맞추기 비교) →",target:"#lounge-sec",match:"m2"}
 ];
 let T_IDX=0,T_TMR=null;
@@ -241,6 +245,7 @@ function initTicker(){
   if(item)item.onclick=()=>{
     const it=TICKER_ITEMS[T_IDX];
     if(it.match){L_STATE.m=it.match;renderLounge()}
+    if(it.post && typeof openBoardPost==="function"){openBoardPost(it.post)}
     const el=$(it.target);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});
   };
   if(go)go.onclick=()=>{const el=$("#lounge-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})};
@@ -283,6 +288,18 @@ const LOUNGE_MATCHES={
       {id:"m3c2",nick:"용산마스터#204",side:"a",time:"14분 전",txt:"결국 상급지 소형이나 재건축이 사이클 꼭대기에서 상승폭이 제일 컸습니다.",likes:18},
       {id:"m3c3",nick:"위례신축파#449",side:"b",time:"29분 전",txt:"아이 둘 키우면서 20평대 구축 살기엔 84㎡ 신축 유혹을 이기기 어렵네요.",likes:13},
       {id:"m3c4",nick:"잠실엘스바라기#917",side:"a",time:"47분 전",txt:"대장주 소형 먼저 깃발 꽂아두고 나중에 평수 넓히는 전략에 한 표 던집니다!",likes:10}
+    ]
+  },
+  m4:{
+    tab:"매치 4: 10~11억대 신축·준신축",
+    q:"Q. 10~11억대 수도권 핵심 신축·준신축 84㎡, 어디가 더 끌리나요?",
+    a:{badge:"🅰️ 서남권 핵심",name:"광명 철산역·뉴타운 신축 84㎡",desc:"7호선 가산·강남·여의도 직결 + 철산 학원가·신축 대단지 탈바꿈",seed:112},
+    b:{badge:"🅱️ 동남권 핵심",name:"강동 고덕·하남 미사 준신축 84㎡",desc:"5·9호선 강남·잠실 생활권 공유 + 대단지 공원·쾌적한 균질성",seed:119},
+    cmts:[
+      {id:"m4c1",nick:"철산역출퇴근#512",side:"a",time:"3분 전",txt:"여의도·가산·강남 동시 출퇴근이면 7호선 철산역 라인에 학원가 도보권이 실거주로 진짜 편합니다.",likes:23},
+      {id:"m4c2",nick:"고덕그라시움#804",side:"b",time:"11분 전",txt:"올림픽파크포레온 입주장 끝나고 강동·미사 생활권 전체 인프라가 한 단계 올라선 게 체감돼요.",likes:26},
+      {id:"m4c3",nick:"광명뉴타운#219",side:"a",time:"24분 전",txt:"광명뉴타운 입주 마무리되면 서남권에서 이만한 규모의 신축 브랜드 타운 찾기가 쉽지 않아요.",likes:17},
+      {id:"m4c4",nick:"미사호수공원#633",side:"b",time:"38분 전",txt:"아이 키우기엔 도로 넓고 공원 잘 되어 있는 고덕·미사 택지지구 균질성이 최고예요.",likes:19}
     ]
   }
 };
@@ -673,5 +690,676 @@ else if(e.key==="Enter"){e.preventDefault();clearTimeout(GT);if(!$("#gres").clas
 q.onblur=()=>setTimeout(gClose,150);$("#gx").onclick=()=>{q.value="";gRender();q.focus()};
 document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==q&&!["INPUT","TEXTAREA","SELECT"].includes((document.activeElement||{}).tagName)){e.preventDefault();q.focus()}});
 document.addEventListener("click",e=>{if(!e.target.closest("#gs"))gClose()})})();
+
+
+// ---------- PHASE 2+: 커뮤니티 게시판 (#community-board) ----------
+const CB_CATS=[
+  {k:"all",lbl:"전체"},
+  {k:"buy",lbl:"매수·갈아타기"},
+  {k:"region",lbl:"서울·경기 입지비교"},
+  {k:"finance",lbl:"대출·규제·정책"},
+  {k:"fact",lbl:"단지·임장 팩트체크"}
+];
+
+const CB_HOT_TAGS=[
+  "전체",
+  "#생애최초·징검다리",
+  "#광명·철산",
+  "#강동·하남·위례",
+  "#수지·분당",
+  "#수원·화서·영통",
+  "#마포·성동",
+  "#토허제·강남잠실",
+  "#DSR·주담대"
+];
+
+const CB_SEED_POSTS=[
+  {
+    id:"p1",
+    cat:"buy",
+    catLbl:"매수·갈아타기",
+    hot:true,
+    region:"수도권 전반 · 6~9억대",
+    sgg:"11620",
+    title:"자금 부족할수록 '징검다리 첫 등기' vs '전세 연장 후 관망', 다들 어떻게 결정하셨나요?",
+    nick:"첫등기성공#308",
+    time:"14분 전",
+    views:1842,
+    likes:94,
+    tags:["#생애최초·징검다리","#DSR·주담대"],
+    body:`신혼 때 현금 2억 남짓으로 시작해서 3년 전 서울 외곽 역세권 59㎡ 첫 등기를 쳤고, 올해 상급지 84㎡로 갈아타기 계약을 마쳤습니다. 주변 친구들과 이야기해보면 지금 가장 많이 하는 고민이 딱 하나더라고요.
+
+"지금이라도 대출 끼고 감당 가능한 선에서 가장 좋은 입지에 첫 등기를 칠까, 아니면 집값 조정 올 때까지 전세로 한 번 더 연장할까?"
+
+제가 직접 겪어보니 전세 매물이 줄어들고 반전세로 전환되는 시기에는, 전세 보증금 올려주느라 종잣돈이 묶이는 게 가장 무서웠습니다. 자금이 부족할수록 처음부터 완벽한 신축 30평대를 기다리기보다, 환금성 확실한 역세권 소형이나 경기 핵심지 대단지 84㎡로 '징검다리 1단계'를 밟아두는 게 상급지와의 격차를 줄이는 유일한 방법이었습니다.
+
+물론 무리한 영끌은 절대 금물이지만, 부부합산 소득으로 원리금 감당이 되는 범위(월 소득의 30~35% 이내)라면 지금 눈여겨보시는 1순위 후보지를 직접 걸어보시는 걸 추천합니다. 회원님들은 지금 매수파신가요, 전세 연장 후 관망파신가요?`,
+    cmts:[
+      {id:"p1c1",nick:"관악역세권#412",badge:"실거주 3년차",time:"11분 전",txt:"100% 공감합니다. 저도 작년에 전세 만기 때 보증금 8천 올려달라길래 그 돈 보태서 2호선 역세권 59㎡ 생애최초로 등기 쳤는데 마음이 너무 편해요."},
+      {id:"p1c2",nick:"신혼예산체크#889",badge:"내집마련 준비",time:"8분 전",txt:"맞아요. 돈이 부족할수록 나중에 팔기 쉬운 '입지 좋은 단지'를 사야 갈아탈 때 제값 받고 나오더라고요. 나홀로 신축보다 대단지 구축 역세권이 훨씬 나았습니다."},
+      {id:"p1c3",nick:"분당갈아타기#104",badge:"갈아타기 완료",time:"4분 전",txt:"징검다리 전략의 핵심은 '내가 팔 때 사줄 실수요(전세가율 60% 이상·역세권·초품아)가 탄탄한가'입니다. 이거 하나만 지켜도 실패 안 합니다."}
+    ]
+  },
+  {
+    id:"p2",
+    cat:"region",
+    catLbl:"서울·경기 입지비교",
+    hot:true,
+    region:"경기 광명시 · 철산/광명",
+    sgg:"41310",
+    title:"광명 실거주 빅매치: 철산역 역세권·학군 대장 vs 광명뉴타운 신축 대단지, 어디가 나을까요?",
+    nick:"7호선통근러#519",
+    time:"28분 전",
+    views:1615,
+    likes:82,
+    tags:["#광명·철산"],
+    body:`여의도·가산디지털단지 맞벌이 부부라 9~11억대 예산으로 광명 임장을 3주째 돌고 있습니다. 직접 가보니 생각보다 '철산동 라인'과 '광명사거리역 뉴타운 라인'의 장단점이 뚜렷해서 고민이 깊어지네요.
+
+1. 철산역 라인 (철산자이더헤리티지·철산래미안자이·도덕파크타운 등)
+- 장점: 7호선 철산역 도보권 + 시청·세무서·상업지구 인프라가 이미 완성형이고, 무엇보다 철산 학원가와 광명중·철산중 학군 배정이 압도적입니다. 도로 폭도 넓고 쾌적해요.
+- 고민: 신축 대장 84㎡는 이미 11~12억대라 예산이 빡빡하고, 7~9억대 준신축·구축으로 눈을 돌리면 연식 차이가 납니다.
+
+2. 광명뉴타운 라인 (아크포레자이위브·광명센트럴아이파크·베르몬트로광명 등)
+- 장점: 2만 5천 세대급 천지개벽 신축 브랜드 타운! 커뮤니티 시설, 지하주차장, 조경은 신축이라 비교 불가 수준으로 깔끔합니다.
+- 고민: 구역별로 광명사거리역 도보 거리와 경사도 편차가 꽤 있고, 아직 주변 입주·정비가 진행 중인 구간이 있습니다.
+
+초등 입학 앞둔 아이 1명 키우는 실거주 + 5년 뒤 가치 상승 기준으로 보실 때 어느 쪽에 한 표 주시나요?`,
+    cmts:[
+      {id:"p2c1",nick:"철산토박이#207",badge:"지역주민",time:"22분 전",txt:"아이 초등 고학년~중학교까지 바라보시면 무조건 철산역 학원가·광명중 배정권 추천합니다. 학령기 전세 수요 자체가 달라서 하락장 방어력이 진짜 강해요."},
+      {id:"p2c2",nick:"뉴타운입주#771",badge:"실거주",time:"16분 전",txt:"광명뉴타운도 1·2·4·11구역 등 역세권 평지 구역들은 입주 마무리되면 분위기 완전히 바뀝니다. 영유아 키우실 땐 신축 커뮤니티랑 지상에 차 없는 공원형 단지가 삶의 질 최고예요."},
+      {id:"p2c3",nick:"가산출퇴근#640",badge:"임장러",time:"9분 전",txt:"지도상 직선거리만 보지 마시고 퇴근 시간대에 역에서 단지 문 앞까지 신호등·언덕 포함해서 꼭 걸어보세요! 철산역 평지 동선 체감이 확실히 좋긴 했습니다."}
+    ]
+  },
+  {
+    id:"p3",
+    cat:"region",
+    catLbl:"서울·경기 입지비교",
+    hot:true,
+    region:"서울 강동 · 경기 하남/위례",
+    sgg:"11440",
+    title:"동남권 10~13억대 실거주: 강동(고덕·둔촌) 대단지 효과 vs 하남 미사·위례 84㎡ 비교",
+    nick:"동남권임장왕#831",
+    time:"42분 전",
+    views:1530,
+    likes:76,
+    tags:["#강동·하남·위례"],
+    body:`잠실·강남 출퇴근 부부인데 예산 10~13억대에서 동남권(강동 고덕·명일·암사 vs 하남 미사강변도시·위례신도시)을 집중 비교하고 있습니다.
+
+최근 둔촌(올림픽파크포레온) 1만 2천 세대 입주장이 마무리되면서 처음엔 주변 전세·매매가 눌릴 줄 알았는데, 막상 현장에 가보니 대단지 인프라가 들어서면서 강동구 전체 생활권 위상이 확 올라간 느낌이더라고요. 특히 고덕 그라시움·아르테온 라인은 5호선·9호선 연장 기대감에 서울세종고속도로 호재까지 겹쳐서 호가가 꽤 단단합니다.
+
+반면 같은 예산이면 강동에서는 59㎡나 구축·나홀로 준신축을 봐야 할 때도 있는데, 바로 옆 하남 미사(호수공원·5호선 역세권)나 위례로 넘어가면 훨씬 여유로운 84㎡ 택지지구 준신축을 매수할 수 있어서 고민입니다.
+- 서울 강동구 등기(고덕·암사·천호 59㎡~가성비 84㎡)
+- 하남 미사 / 위례 대장급 84㎡
+
+실거주 만족도와 향후 잠실 키맞추기 탄력 면에서 어떻게 보시나요?`,
+    cmts:[
+      {id:"p3c1",nick:"고덕실거주#319",badge:"지역주민",time:"35분 전",txt:"고덕은 한 번 살아보면 타 지역으로 못 나갑니다. 녹지 비율 높고 학원가·명덕초~배재고 학군 라인에 길 건너 상권까지 너무 깔끔해요. 서울세종고속도로 개통 체감도 엄청 큽니다."},
+      {id:"p3c2",nick:"미사역세권#552",badge:"실거주",time:"27분 전",txt:"가성비와 평수를 챙기려면 미사역 도보권 84㎡가 진짜 알짜입니다. 5호선 타면 고덕이랑 2~3정거장 차이인데 가격 메리트가 확실하고 호수공원 산책로가 예술이에요."},
+      {id:"p3c3",nick:"잠실출퇴근#901",badge:"갈아타기",time:"15분 전",txt:"상승장 초입에는 항상 잠실 → 강동(고덕·둔촌) → 미사·위례 순서로 시차를 두고 파도가 넘어왔어요. 지금 두 지역 가격 갭이 벌어졌는지 좁혀졌는지 실거래 차트로 꼭 비교해보세요!"}
+    ]
+  },
+  {
+    id:"p4",
+    cat:"fact",
+    catLbl:"단지·임장 팩트체크",
+    hot:true,
+    region:"경기 용인시 수지구",
+    sgg:"41465",
+    title:"신분당선 라인 '교통·학군 갓성비' 용인 수지(성복·풍덕천·동천) 주말 현장 임장 팩트체크",
+    nick:"신분당선러버#405",
+    time:"1시간 전",
+    views:1720,
+    likes:89,
+    tags:["#수지·분당"],
+    body:`판교·강남 출퇴근하면서 7~10억대 실거주 찾으시는 분들이 왜 결국 '용인 수지'로 모이는지 이번 주말 성복역~수지구청역~동천역 풀코스로 걸어보고 단번에 이해했습니다.
+
+1. 교통 체감 (신분당선의 위력)
+- 성복역·수지구청역에서 판교역까지 10분대, 강남역까지 20분대 후반이면 끊깁니다. 버스 환승 없이 지하철 하나로 강남·판교 핵심 일자리를 꽂아주는 게 가장 큰 무기입니다.
+
+2. 학군 & 거주 분위기 팩트체크
+- 수지구청역 인근 풍덕천동 학원가 규모가 생각보다 훨씬 탄탄합니다. 다만 인기 중학교(정평중 등) 배정을 안정적으로 받으려면 초등학교 4학년 전학이 아니라 초1 입학 때부터 거주 연한을 채워야 안정권이라는 현장 소장님 팁을 들었습니다!
+- 성복동(성복역 롯데캐슬 골드타운 등)은 롯데몰 슬세권에 광교산 자락이라 공기가 쾌적하고 거주민분들 분위기가 정말 차분하고 깔끔했습니다.
+
+분당 84㎡가 13~16억대로 부담스러울 때, 바로 아랫동네인 수지 84㎡가 전세가율 탄탄하게 받쳐주며 키맞추기 하는 이유가 확실히 있네요.`,
+    cmts:[
+      {id:"p4c1",nick:"성복동주민#118",badge:"지역주민",time:"51분 전",txt:"성복동 5년 거주 중인데 주민분들 시민의식 높고 동네가 정말 쾌적해서 살기 참 좋습니다. 신분당선 한 번 타면 다른 노선 못 타요 ㅎㅎ"},
+      {id:"p4c2",nick:"풍덕천학부모#624",badge:"학부모",time:"39분 전",txt:"정평중 배정 팁 정확하십니다! 요즘 학령기 유입이 많아서 초등학교 1학년 입학 기준으로 들어오셔야 마음 편하게 배정받아요."},
+      {id:"p4c3",nick:"판교개발자#290",badge:"실거주",time:"21분 전",txt:"수지는 진짜 '살기 좋아서 들어왔다가 수지맞는 동네'라는 말이 딱 맞아요. 분당 움직이면 3개월 뒤에 바로 거래량부터 반응 옵니다."}
+    ]
+  },
+  {
+    id:"p5",
+    cat:"fact",
+    catLbl:"단지·임장 팩트체크",
+    hot:true,
+    region:"경기 수원시 · 화서/매교/영통",
+    sgg:"41117",
+    title:"스타필드 품은 수원 화서역(대유평) vs 매교역 신축 타운 vs 영통 학군지 도보 임장 비교기",
+    nick:"수원임장노트#712",
+    time:"1시간 전",
+    views:1490,
+    likes:73,
+    tags:["#수원·화서·영통"],
+    body:`경기도 1등 인구 자족도시 수원에서 지금 가장 뜨거운 3대 축(화서역 대유평지구 · 매교역 신축 재개발 · 영통/광교 라인)을 하루 날 잡고 다녀왔습니다. 지도 앱으로만 보던 것과 실제 도보 체감이 꽤 달랐어요!
+
+1. 화서역 파크푸르지오 & 브리시엘 (대유평지구)
+- 스타필드 수원이 단지랑 브릿지로 바로 연결되는 슬세권 위력이 어마어마합니다. 초·중·고와 숙지공원, 화서역(1호선 + 신분당선 연장 호재)까지 평지로 이어져서 실거주 만족도가 왜 높은지 체감됐습니다.
+
+2. 수원역 푸르지오자이 & 매교역 신축 타운
+- 매교역 일대 1만 2천 세대 신축 브랜드 타운은 길도 깨끗하고 단지 컨디션이 훌륭합니다. 다만 일부 단지에서 수원역까지 도보로 걸어보니 지도상 거리보다 은근히 호흡이 길어서, 성인 걸음 컨디션에 따라 역까지 직접 걸어보고 동을 고르시는 걸 추천해요.
+
+3. 영통구 (망포·영통 학원가·광교 인접)
+- 삼성전자 직주근접 + 영통 학원가 + 분당선·신분당선 라인이라 전세 수요가 사계절 내내 마르지 않는 탄탄한 실수요 지역이었습니다. 최근 영통구 84㎡ 거래량이 먼저 반등하는 이유를 알겠더라고요.`,
+    cmts:[
+      {id:"p5c1",nick:"화서브리시엘#334",badge:"지역주민",time:"55분 전",txt:"화서역 브리시엘·화서역파크푸르지오는 스타필드 브릿지 연결 + 초중고·공원·역세권까지 진짜 원스톱이라 실거주 만족도 최고입니다."},
+      {id:"p5c2",nick:"매교실거주#508",badge:"실거주",time:"44분 전",txt:"수원역 도보 체감 팩트체크 공감해요! 지도만 보지 말고 직접 걸어봐야 합니다. 대신 매교역 초역세권 동들은 분당선 타기 정말 편하고 화서역 주변은 범계역처럼 깔끔해졌어요."},
+      {id:"p5c3",nick:"영통삼성맨#815",badge:"지역주민",time:"30분 전",txt:"아이 학원 돌리기엔 영통 중심상가 학원가 따라올 곳이 없죠. 리모델링·재건축 추진 단지들이랑 망포 신축 대단지 둘 다 전세가율이 엄청 탄탄합니다."}
+    ]
+  },
+  {
+    id:"p6",
+    cat:"finance",
+    catLbl:"대출·규제·정책",
+    hot:true,
+    region:"서울 송파·강남 · 수도권 핵심",
+    sgg:"11170",
+    title:"토지거래허가구역 해제 파장 & 잠실(엘·리·트·레)·대치·삼성 이후 비규제 풍선효과 정리",
+    nick:"시장시그널분석#102",
+    time:"2시간 전",
+    views:1680,
+    likes:81,
+    tags:["#토허제·강남잠실","#마포·성동"],
+    body:`토지거래허가구역 해제 발표 전후로 잠실(엘스·리센츠·트리지움·레이크팰리스)과 대치(래미안대치팰리스)·삼성(래미안라클래시·센트럴아이파크) 현장 분위기를 체크해봤습니다.
+
+1. 상급지 현장 변화
+- 실거주 2년 의무가 풀리고 전세 끼고 매수(갭투자)가 가능해지자마자, 집주인들이 내놨던 매물을 거둬들이거나 호가를 한 번에 1~2억씩 올리는 현상이 나타났습니다. "부동산에 가도 계좌가 안 나온다"는 말이 나올 정도로 상급지 대기 수요가 강하게 확인됐어요.
+
+2. 우리에게 중요한 '다음 풍선효과(키맞추기)' 경로
+- 잠실·강남 84㎡가 한 단계 위로 점프하면, 그 예산으로 진입하려던 실수요자들이 즉각 눈을 돌리는 곳이 바로 **성동(옥수·금호·왕십리)·마포(아현·공덕)·광진·강동(고덕·둔촌)·분당·과천**입니다.
+- 그리고 그다음 파도가 **수지·광명·평촌·영통** 등 경기 핵심지 대장 84㎡로 3~6개월 시차를 두고 번집니다.
+
+지금 상급지를 추격매수하기보다, 상급지와의 가격 갭이 역사적 평균보다 크게 벌어진 '인접 2선 핵심지'의 거래량 반등 단지를 선점하는 게 훨씬 유리한 구간으로 보입니다.`,
+    cmts:[
+      {id:"p6c1",nick:"잠실모니터링#920",badge:"실거주",time:"1시간 전",txt:"현장 분위기 진짜 그대로입니다. 발표 당일 저녁부터 중개소에 전화 불나고 기존 급매물은 하루 만에 다 정리됐어요."},
+      {id:"p6c2",nick:"성동갈아타기#441",badge:"갈아타기",time:"52분 전",txt:"잠실 84㎡ 호가 뛰는 거 보고 바로 성동·강동 신축급 84㎡로 선회하는 매수 대기자들이 눈에 띄게 늘었습니다. 시차 키맞추기 공식은 늘 반복되네요."},
+      {id:"p6c3",nick:"데이터트래커#193",badge:"분석러",time:"37분 전",txt:"집썰 상단 '서울 vs 경기 밸런스 라운지'랑 단지별 최근 30일·90일 실거래 등락률 같이 보면서 아직 덜 오른 대표단지 찾는 게 핵심이겠네요."}
+    ]
+  },
+  {
+    id:"p7",
+    cat:"region",
+    catLbl:"서울·경기 입지비교",
+    hot:false,
+    region:"서울 마포/성동 vs 경기 분당/수지",
+    sgg:"11440",
+    title:"9~11억 맞벌이 최대 난제: 서울 마포·성동 구축 59㎡ 버티기 vs 분당·수지 준신축 84㎡",
+    nick:"맞벌이갈림길#611",
+    time:"2시간 전",
+    views:1340,
+    likes:64,
+    tags:["#마포·성동","#수지·분당"],
+    body:`광화문(남편)·강남(아내) 출퇴근하는 5년 차 맞벌이 부부입니다. 현재 종잣돈 + 대출 합쳐서 9.5~10.5억 선으로 매수를 보는데, 이 예산대 부부들이 100% 겪는 밸런스 게임에 빠졌습니다.
+
+A안. 서울 마포·성동 역세권 구축 59㎡ (20평대 방 3개·화장실 1~2개)
+- 두 사람 모두 통근 왕복 1시간 이내로 삶의 여유 확보
+- 서울 핵심지라 회복장 때 가장 먼저 오르고 전세가율·환금성이 압도적
+
+B안. 경기 분당·용인 수지 신분당선 준신축 84㎡ (30평대 방 3개·화장실 2개·광폭 주차)
+- 아이 키우면서 짐 늘어날 때 30평대 + 지하주차장 연결 + 학군·공원 인프라는 비교 불가
+- 광화문 출퇴근은 광역버스/환승으로 편도 1시간 10~20분 감수해야 함
+
+밸런스 라운지 투표도 거의 52:48로 박빙이던데, 실제로 결정하신 선배님들 후기가 궁금합니다!`,
+    cmts:[
+      {id:"p7c1",nick:"마포59거주#284",badge:"서울파",time:"1시간 전",txt:"아이 초등 저학년 전까지는 맞벌이 부부 출퇴근 체력 아끼는 게 최고입니다. 마포·성동 59㎡ 등기 쳐서 자산 불린 뒤 초등 고학년 때 84㎡로 넘어가세요!"},
+      {id:"p7c2",nick:"분당84만족#739",badge:"경기파",time:"1시간 전",txt:"유모차 끌고 퇴근 후 밤 10시에 이중주차 밀어보시면 다음 날 바로 준신축 84㎡ 계약서 쓰게 됩니다. 신분당선 라인 84㎡도 서울 59㎡ 오른 뒤 꼭 따라붙어요."}
+    ]
+  },
+  {
+    id:"p8",
+    cat:"finance",
+    catLbl:"대출·규제·정책",
+    hot:false,
+    region:"수도권 공통 · 주담대/DSR",
+    sgg:"11110",
+    title:"스트레스 DSR 적용 후 부부합산 소득별 실전 주담대 한도·원리금 안전선 정리",
+    nick:"내집마련재무#490",
+    time:"3시간 전",
+    views:1285,
+    likes:71,
+    tags:["#DSR·주담대","#생애최초·징검다리"],
+    body:`집 보러 다니기 전에 '내 대출력이 정확히 얼마인지'부터 계산해야 헛걸음을 안 합니다. 최근 스트레스 DSR 가산금리가 적용되면서 예전 생각하고 가계약금부터 넣었다가 한도 부족으로 당황하는 분들이 꽤 계시더라고요.
+
+[실전 체크 포인트 3가지]
+1. 마이너스 통장(미사용 한도 포함)·신용대출 보유 시 DSR 한도가 크게 깎입니다. 매수 전 안 쓰는 마통은 반드시 한도 감액이나 해지부터 하세요.
+2. 생애최초 LTV 80%(최대 6억 한도)가 나오더라도, 결국 최종 대출액은 LTV가 아니라 부부합산 연소득 기준 **DSR(40%)**에서 결정되는 경우가 대부분입니다.
+3. 가장 안전한 실거주 기준선은 **월 실수령액 대비 원리금 상환액 30~35% 이하**입니다. 금리 인하기 기대감만 믿고 변동금리 영끌하기보다, 5년 주기형·혼합형 금리와 중도상환수수료 면제 시점(3년)을 함께 설계하세요.`,
+    cmts:[
+      {id:"p8c1",nick:"올해등기목표#156",badge:"내집마련 준비",time:"2시간 전",txt:"안 쓰는 마이너스 통장 5천만 원 열어둔 게 DSR 한도를 그렇게 많이 잡아먹는지 은행 상담받고 처음 알았어요. 계약 전에 미리 정리 필수입니다!"},
+      {id:"p8c2",nick:"갈아타기성공#902",badge:"실거주",time:"1시간 전",txt:"부부합산 원리금 30% 이내가 진짜 심리적 마지노선 맞습니다. 그래야 조정장이 와도 흔들리지 않고 버틸 수 있어요."}
+    ]
+  },
+  {
+    id:"p9",
+    cat:"fact",
+    catLbl:"단지·임장 팩트체크",
+    hot:false,
+    region:"서울 동대문·성북 · 이문/장위",
+    sgg:"11305",
+    title:"서울 동북권 9~11억대 신축 대단지: 이문·휘경 뉴타운 vs 장위 뉴타운 현장 비교",
+    nick:"동북권신축탐방#377",
+    time:"4시간 전",
+    views:1190,
+    likes:53,
+    tags:["#생애최초·징검다리"],
+    body:`서울 안에서 9~11억대로 번듯한 브랜드 대단지 신축 59㎡~84㎡에 들어갈 수 있는 마지막 기회의 땅이 동대문구 이문·휘경 뉴타운(래미안 라그란데·이문 아이파크자이 등)과 성북구 장위 뉴타운(장위자이 레디언트 등)인 것 같아 두 곳 모두 임장 다녀왔습니다.
+
+- 이문·휘경 뉴타운: 1호선 외대앞역·회기역·신이문역 평지 역세권에 1만 세대 이상 브랜드 대단지가 한꺼번에 들어서면서 동네 스카이라인이 완전히 바뀌었습니다. 청량리역(GTX-B·C, 분당선, KTX) 생활권을 가깝게 누릴 수 있는 게 큰 장점입니다.
+- 장위 뉴타운: 6호선 돌곶이역·석계역(1·6호선 환승) 라인에 대단지 신축이 들어섰고 북서울꿈의숲 녹지 접근성이 좋습니다.
+
+신축 대단지 입주장에는 전세 물량이 일시적으로 쏟아지면서 전세가가 합리적으로 형성되니, 신혼부부 첫 실거주나 전세 레버리지로 눈여겨보기에 가성비가 훌륭해 보입니다.`,
+    cmts:[
+      {id:"p9c1",nick:"청량리생활권#618",badge:"지역주민",time:"3시간 전",txt:"이문·휘경은 평지 비중이 높고 청량리역 백화점·마트 인프라 이용하기가 너무 편해서 입주 후 만족도가 확 올라가고 있어요."},
+      {id:"p9c2",nick:"신축첫입주#245",badge:"실거주",time:"2시간 전",txt:"인서울 신축 대단지의 힘은 입주장 끝나고 2년 차 돌입할 때 진짜 무섭게 나타나죠. 전세 물량 소화되는 속도가 엄청 빠릅니다."}
+    ]
+  },
+  {
+    id:"p10",
+    cat:"fact",
+    catLbl:"단지·임장 팩트체크",
+    hot:false,
+    region:"경기 안양시 동안구 · 평촌/인덕원",
+    sgg:"41117",
+    title:"경기 남부 학군 1티어 평촌 학원가 & 인덕원 쿼드러플 역세권 주말 도보 임장기",
+    nick:"동안구학부모#842",
+    time:"5시간 전",
+    views:1120,
+    likes:58,
+    tags:["#수원·화서·영통","#수지·분당"],
+    body:`초등 자녀 학군 때문에 안양 동안구(평촌 학원가 인근 귀인동·범계역 라인과 인덕원역 인근 신축·준신축)를 꼼꼼히 둘러봤습니다.
+
+1. 평촌 학원가 & 귀인동·범계 라인
+- 경기도에서 대치동 다음으로 학원가 밀집도가 높다는 말을 실감했습니다. 반듯한 평지 격자형 도시에 중앙공원·롯데백화점·한림대병원까지 인프라가 완벽합니다. 선도지구 재건축 기대감 있는 단지들과 학원가 도보권 59·84㎡는 실거주+학군 수요가 워낙 두터워서 최근 거래량이 빠르게 살아나고 있네요.
+
+2. 인덕원역 라인 (평촌센텀퍼스트·푸르지오엘센트로 등)
+- 기존 4호선에 월판선(판교 직결)·인동선·GTX-C까지 예정된 쿼드러플 역세권 입지라 판교·강남·사당 출퇴근하는 젊은 맞벌이 수요가 강하게 유입되고 있었습니다.`,
+    cmts:[
+      {id:"p10c1",nick:"평촌학원가#390",badge:"지역주민",time:"4시간 전",txt:"평촌은 한 번 들어오면 아이 대학 갈 때까지 이사를 안 나갑니다. 학원 셔틀 안 태우고 도보로 보낼 수 있는 게 맞벌이 부부에게 엄청난 축복이에요."},
+      {id:"p10c2",nick:"인덕원판교러#511",badge:"실거주",time:"3시간 전",txt:"인덕원~판교 접근성이 좋아서 판교 IT 맞벌이 부부들이 평촌·인덕원 신축으로 정말 많이 넘어오고 있습니다."}
+    ]
+  },
+  {
+    id:"p11",
+    cat:"buy",
+    catLbl:"매수·갈아타기",
+    hot:false,
+    region:"서울 동작·서초·송파 · 13~15억대",
+    sgg:"11170",
+    title:"13~15억 상급지 진입 전략: 노량진 뉴타운·방배 정비사업 vs 송파·강동 준신축 등기",
+    nick:"상급지점프#904",
+    time:"6시간 전",
+    views:1260,
+    likes:61,
+    tags:["#토허제·강남잠실","#강동·하남·위례"],
+    body:`기존 보유 1주택 매도 후 13~15억대 상급지로 갈아타기를 준비하면서 가장 많이 비교한 두 가지 루트입니다.
+
+1. 입지 급상승 중인 동작(노량진 뉴타운·흑석) 및 방배 인근 진입
+- 여의도·용산·강남 삼각축 한가운데 위치한 노량진 뉴타운은 하이엔드 브랜드들이 줄줄이 들어서면서 미래 한강변 준상급지로 완전히 탈바꿈하고 있습니다.
+
+2. 지금 당장 쾌적하게 실거주 가능한 송파·강동(고덕·둔촌)·성동·분당 대단지 84㎡
+- 공사비 상승이나 입주 대기 기간 리스크 없이, 당장 완성된 인프라와 학군을 누리면서 상급지 시세 흐름을 그대로 따라갈 수 있습니다.
+
+아이 나이가 어리거나 전세를 끼고 시간을 살 수 있다면 입지 상향(1번)이 매력적이고, 당장 초중고 학령기 실거주라면 완성형 대단지(2번)가 후회 없는 선택이 될 것 같습니다.`,
+    cmts:[
+      {id:"p11c1",nick:"동작한강변#721",badge:"갈아타기",time:"5시간 전",txt:"노량진 뉴타운은 입지 자체가 여의도·용산·강남 코앞이라 전부 입주하고 나면 지금 흑석·아현 이상으로 위상이 바뀔 곳이라 봅니다."},
+      {id:"p11c2",nick:"송파실거주#108",badge:"실거주",time:"4시간 전",txt:"돈이 묶이는 기간과 이주·공사비 변수가 부담스럽다면 이미 입주 마친 대단지 신축·준신축 등기가 마음 건강에 훨씬 좋습니다."}
+    ]
+  },
+  {
+    id:"p12",
+    cat:"fact",
+    catLbl:"단지·임장 팩트체크",
+    hot:false,
+    region:"임장 노하우 · 수도권 공통",
+    sgg:"11620",
+    title:"지도 앱만 보고 샀다가 후회합니다! 임장 현장에서 10분 만에 단지 급 알아보는 꿀팁 5가지",
+    nick:"주말임장러#550",
+    time:"7시간 전",
+    views:1410,
+    likes:88,
+    tags:["#광명·철산","#수원·화서·영통"],
+    body:`주말마다 수도권 단지를 걸어 다니면서 터득한 '현장에 가야만 보이는 팩트체크 리스트 5가지'를 공유합니다.
+
+1. 외벽 '창호(샤시)'로 수리 상태 한눈에 파악하기
+- 구축 아파트 임장 갈 때 1층에서 위를 올려다보세요. 로고 박힌 최신 이중창 샤시로 바뀐 세대 비율이 높을수록 실거주 집주인이 애정을 갖고 올수리하며 사는 단지입니다. 매수할 때도 샤시 교체 여부가 인테리어 비용 1,000~1,500만 원을 좌우합니다!
+
+2. 대형몰·지하철역 '브릿지 직결 & 실제 도보 신호등' 체크
+- 지도상 직선거리 400m라도 왕복 8차선 신호등 2개 건너고 오르막이면 체감 12분이고, 평지 보행자 전용도로나 브릿지로 연결되면 체감 4분입니다.
+
+3. 대형 쇼핑몰 바로 앞 상가의 명암과 동별 소음
+- 스타필드·백화점 슬세권이라도 정문 진·출입 차량 대기줄이 서는 동인지, 조용한 공원뷰 동인지에 따라 실거주 만족도와 로얄동 가격 차이가 꽤 납니다.
+
+4. 초등학교 배정 학구도와 횡단보도 유무
+5. 평일 저녁 9시 이후 주차장 여유도 (가능하면 저녁에 한 번 더 가보세요!)`,
+    cmts:[
+      {id:"p12c1",nick:"창호체크꿀팁#882",badge:"공감",time:"6시간 전",txt:"1번 창호(샤시)로 평형이랑 내부 수리 상태 가늠하는 팁 진짜 유용하네요! 구축 볼 때 샤시만 되어 있어도 인테리어 예산이 확 줄어들죠."},
+      {id:"p12c2",nick:"초품아엄마#340",badge:"학부모",time:"5시간 전",txt:"지도상 도보 5분인데 막상 걸어보니 육교 건너고 언덕이었던 단지가 꽤 많았어요. 무조건 내 발로 걸어보고 계약해야 합니다."}
+    ]
+  }
+];
+
+let CB_STATE={cat:"all",tag:"전체",q:"",sort:"hot",openId:"p1",limit:6,composing:false};
+
+function getCbPosts(){
+  let userPosts=[];try{userPosts=JSON.parse(localStorage.getItem("jade_cb_posts")||"[]")}catch(e){}
+  let likes={};try{likes=JSON.parse(localStorage.getItem("jade_cb_likes")||"{}")}catch(e){}
+  let cmtMap={};try{cmtMap=JSON.parse(localStorage.getItem("jade_cb_cmts")||"{}")}catch(e){}
+  const all=[...userPosts,...CB_SEED_POSTS].map(p=>{
+    const extraCmts=cmtMap[p.id]||[];
+    const mergedCmts=[...extraCmts,...(p.cmts||[])];
+    const liked=!!likes[p.id];
+    const lk=(p.likes||0)+(liked?1:0);
+    return {...p,cmts:mergedCmts,liked,likesCount:lk,cmtCount:mergedCmts.length};
+  });
+  return all;
+}
+
+function openBoardPost(pid){
+  CB_STATE.openId=pid;
+  CB_STATE.cat="all";
+  CB_STATE.tag="전체";
+  CB_STATE.q="";
+  CB_STATE.limit=Math.max(CB_STATE.limit,12);
+  renderCommunityBoard();
+  setTimeout(()=>{
+    const el=document.querySelector(`.cb-item[data-id="${pid}"]`)||$("#community-board");
+    if(el)el.scrollIntoView({behavior:"smooth",block:"center"});
+  },60);
+}
+
+function renderCommunityBoard(){
+  const wrap=$("#community-board");
+  if(!wrap)return;
+  const all=getCbPosts();
+  const catCounts={all:all.length};
+  CB_CATS.forEach(c=>{if(c.k!=="all")catCounts[c.k]=all.filter(p=>p.cat===c.k).length});
+
+  const q=CB_STATE.q.trim().toLowerCase();
+  let filtered=all.filter(p=>{
+    if(CB_STATE.cat!=="all"&&p.cat!==CB_STATE.cat)return false;
+    if(CB_STATE.tag!=="전체"&&!(p.tags||[]).includes(CB_STATE.tag))return false;
+    if(q){
+      const hay=(p.title+" "+p.body+" "+p.region+" "+(p.tags||[]).join(" ")).toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+
+  if(CB_STATE.sort==="hot"){
+    filtered.sort((a,b)=>(b.hot?1:0)-(a.hot?1:0)||b.likesCount-a.likesCount||b.cmtCount-a.cmtCount);
+  }else if(CB_STATE.sort==="cmt"){
+    filtered.sort((a,b)=>b.cmtCount-a.cmtCount||b.likesCount-a.likesCount);
+  }
+
+  const visible=filtered.slice(0,CB_STATE.limit);
+
+  wrap.innerHTML=`
+    <div class="cb-head">
+      <div class="cb-title-group">
+        <span class="cb-eyebrow">📋 COMMUNITY BOARD · 실거주·갈아타기 최다 언급 토픽</span>
+        <h4>💬 집썰 실거주·임장 커뮤니티 게시판</h4>
+        <p class="cb-sub">지금 내집마련·갈아타기 실수요자들이 가장 많이 비교하고 물어보는 핵심 주제와 현장 팩트체크</p>
+      </div>
+      <div class="cb-head-actions">
+        <button type="button" class="cb-write-toggle" id="cb-write-btn">✏️ 새 글 쓰기</button>
+      </div>
+    </div>
+
+    <div class="cb-hot-bar" role="region" aria-label="최다 언급 키워드 태그">
+      <span class="cb-hot-label">🔥 최다 언급 키워드</span>
+      ${CB_HOT_TAGS.map(t=>`<button type="button" class="cb-tag-pill ${CB_STATE.tag===t?"on":""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}
+    </div>
+
+    <div class="cb-controls">
+      <div class="cb-cats" role="tablist" aria-label="게시판 카테고리">
+        ${CB_CATS.map(c=>`<button type="button" role="tab" aria-selected="${CB_STATE.cat===c.k}" class="cb-cat-btn ${CB_STATE.cat===c.k?"on":""}" data-cat="${c.k}">${esc(c.lbl)}<span class="cb-cat-cnt">${catCounts[c.k]||0}</span></button>`).join("")}
+      </div>
+      <div class="cb-right-tools">
+        <div class="cb-search-wrap">
+          <input type="search" class="cb-search-inp" id="cb-q" value="${esc(CB_STATE.q)}" placeholder="⌕ 지역·단지·키워드 검색" aria-label="게시판 검색">
+        </div>
+        <div class="cb-sort-group" role="group" aria-label="정렬">
+          <button type="button" class="cb-sort-btn ${CB_STATE.sort==="hot"?"on":""}" data-sort="hot">🔥 인기순</button>
+          <button type="button" class="cb-sort-btn ${CB_STATE.sort==="new"?"on":""}" data-sort="new">🕒 최신순</button>
+          <button type="button" class="cb-sort-btn ${CB_STATE.sort==="cmt"?"on":""}" data-sort="cmt">💬 댓글순</button>
+        </div>
+      </div>
+    </div>
+
+    <form class="cb-composer ${CB_STATE.composing?"":"hidden"}" id="cb-composer">
+      <div class="cb-comp-top">
+        <select class="cb-comp-sel" id="cb-in-cat" aria-label="카테고리 선택">
+          <option value="buy">매수·갈아타기</option>
+          <option value="region">서울·경기 입지비교</option>
+          <option value="finance">대출·규제·정책</option>
+          <option value="fact">단지·임장 팩트체크</option>
+        </select>
+        <input type="text" class="cb-comp-region" id="cb-in-region" placeholder="관심 지역/예산 (예: 광명·철산 9억대)" maxlength="30">
+        <input type="text" class="cb-comp-title" id="cb-in-title" placeholder="제목을 입력하세요 (고민 중인 지역·단지·질문)" maxlength="80" required>
+      </div>
+      <textarea class="cb-comp-body" id="cb-in-body" placeholder="비교 중인 단지, 예산/대출 조건, 현장에서 느낀 점이나 질문을 자유롭게 남겨보세요." maxlength="1000" required></textarea>
+      <div class="cb-comp-foot">
+        <span class="muted sm">익명 닉네임(<b>${esc(getMyNick())}</b>)으로 등록되며 이 기기에 즉시 반영됩니다.</span>
+        <div class="cb-comp-btns">
+          <button type="button" class="cb-comp-cancel" id="cb-comp-cancel">취소</button>
+          <button type="submit" class="cb-comp-submit">게시글 등록</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="cb-list">
+      ${visible.length?visible.map(p=>{
+        const isOpen=CB_STATE.openId===p.id;
+        return `
+          <article class="cb-item ${isOpen?"open":""}" data-id="${esc(p.id)}">
+            <div class="cb-row" data-toggle="${esc(p.id)}">
+              <div class="cb-row-top">
+                <div class="cb-badges">
+                  ${p.hot?'<span class="cb-badge-hot">🔥 최다언급</span>':""}
+                  <span class="cb-badge-cat cat-${esc(p.cat)}">${esc(p.catLbl)}</span>
+                  <span class="cb-badge-region">📍 ${esc(p.region)}</span>
+                </div>
+                <span class="muted sm">${esc(p.time)}</span>
+              </div>
+              <div class="cb-row-title-wrap">
+                <h5 class="cb-row-title">${esc(p.title)}</h5>
+                <span class="cb-row-cmt-cnt">[${p.cmtCount}]</span>
+              </div>
+              <p class="cb-row-preview">${esc(p.body.replace(/\n+/g," "))}</p>
+              <div class="cb-row-meta">
+                <div class="cb-meta-left">
+                  <span class="cb-nick">${esc(p.nick)}</span>
+                  <span>조회 ${(p.views||0).toLocaleString()}</span>
+                </div>
+                <div class="cb-meta-right">
+                  <span class="cb-stat-like">👍 공감 ${p.likesCount}</span>
+                  <span class="cb-stat-cmt">💬 댓글 ${p.cmtCount}</span>
+                  <span>${isOpen?"접기 ▲":"펼쳐보기 ▼"}</span>
+                </div>
+              </div>
+            </div>
+            ${isOpen?`
+              <div class="cb-detail">
+                <div class="cb-body">${esc(p.body)}</div>
+                ${(p.tags&&p.tags.length)?`<div class="cb-detail-tags">${p.tags.map(t=>`<span class="cb-detail-tag">${esc(t)}</span>`).join("")}</div>`:""}
+                <div class="cb-detail-actions">
+                  <button type="button" class="cb-like-btn ${p.liked?"liked":""}" data-like="${esc(p.id)}">👍 공감 ${p.likesCount}명 ${p.liked?"(공감완료)":""}</button>
+                  <button type="button" class="cb-jump-region-btn" data-jump-sgg="${esc(p.sgg||"")}">📊 관련 지역 실거래 단지 보러가기 →</button>
+                </div>
+                <div class="cb-replies-wrap">
+                  <div class="cb-replies-title">💬 실수요자 댓글 · 현장 의견 (${p.cmtCount})</div>
+                  <div class="cb-reply-list">
+                    ${p.cmts.map(c=>`
+                      <div class="cb-reply-item">
+                        <div class="cb-reply-head">
+                          <span><span class="cb-reply-nick">${esc(c.nick)}</span>${c.badge?`<span class="cb-reply-badge">${esc(c.badge)}</span>`:""}</span>
+                          <span>${esc(c.time)}</span>
+                        </div>
+                        <div class="cb-reply-txt">${esc(c.txt)}</div>
+                      </div>
+                    `).join("")}
+                  </div>
+                  <form class="cb-reply-form" data-pid="${esc(p.id)}">
+                    <input type="text" class="cb-reply-inp" maxlength="160" placeholder="이 주제에 대한 내 생각이나 현장 체감을 남겨주세요 (최대 160자)" aria-label="댓글 입력">
+                    <button type="submit" class="cb-reply-submit">댓글 등록</button>
+                  </form>
+                </div>
+              </div>
+            `:""}
+          </article>
+        `;
+      }).join(""):'<p class="muted" style="padding:18px 4px;text-align:center;">선택한 조건에 맞는 게시글이 없어요. 다른 키워드를 선택해보세요.</p>'}
+    </div>
+
+    ${filtered.length>CB_STATE.limit?`
+      <div class="cb-more-wrap">
+        <button type="button" class="cb-more-btn" id="cb-more-btn">게시글 더보기 (${visible.length}/${filtered.length}) ▼</button>
+      </div>
+    `:""}
+  `;
+
+  // Bind events
+  const writeBtn=$("#cb-write-btn");
+  if(writeBtn)writeBtn.onclick=()=>{CB_STATE.composing=!CB_STATE.composing;renderCommunityBoard()};
+  const cancelBtn=$("#cb-comp-cancel");
+  if(cancelBtn)cancelBtn.onclick=()=>{CB_STATE.composing=false;renderCommunityBoard()};
+
+  wrap.querySelectorAll(".cb-tag-pill").forEach(b=>b.onclick=()=>{
+    const t=b.dataset.tag;
+    CB_STATE.tag=(CB_STATE.tag===t&&t!=="전체")?"전체":t;
+    renderCommunityBoard();
+  });
+
+  wrap.querySelectorAll(".cb-cat-btn").forEach(b=>b.onclick=()=>{
+    CB_STATE.cat=b.dataset.cat;
+    renderCommunityBoard();
+  });
+
+  wrap.querySelectorAll(".cb-sort-btn").forEach(b=>b.onclick=()=>{
+    CB_STATE.sort=b.dataset.sort;
+    renderCommunityBoard();
+  });
+
+  const qInp=$("#cb-q");
+  if(qInp){
+    qInp.oninput=e=>{
+      CB_STATE.q=e.target.value;
+      const pos=qInp.selectionStart;
+      renderCommunityBoard();
+      const nq=$("#cb-q");
+      if(nq){nq.focus();try{nq.setSelectionRange(pos,pos)}catch(err){}}
+    };
+  }
+
+  const compForm=$("#cb-composer");
+  if(compForm){
+    compForm.onsubmit=e=>{
+      e.preventDefault();
+      const cat=($("#cb-in-cat")||{}).value||"buy";
+      const catObj=CB_CATS.find(c=>c.k===cat)||CB_CATS[1];
+      const reg=(($("#cb-in-region")||{}).value||"").trim()||"수도권 실거주";
+      const title=(($("#cb-in-title")||{}).value||"").trim();
+      const body=(($("#cb-in-body")||{}).value||"").trim();
+      if(!title||!body){toast("제목과 내용을 입력해주세요.");return}
+      let userPosts=[];try{userPosts=JSON.parse(localStorage.getItem("jade_cb_posts")||"[]")}catch(err){}
+      const np={
+        id:"up"+Date.now(),
+        cat,
+        catLbl:catObj.lbl,
+        hot:false,
+        region:reg,
+        sgg:"11440",
+        title,
+        nick:getMyNick(),
+        time:"방금 전",
+        views:1,
+        likes:1,
+        tags:[CB_STATE.tag!=="전체"?CB_STATE.tag:"#생애최초·징검다리"],
+        body,
+        cmts:[]
+      };
+      userPosts.unshift(np);
+      try{localStorage.setItem("jade_cb_posts",JSON.stringify(userPosts.slice(0,30)))}catch(err){}
+      CB_STATE.composing=false;
+      CB_STATE.cat="all";
+      CB_STATE.tag="전체";
+      CB_STATE.openId=np.id;
+      renderCommunityBoard();
+      toast("📋 새 게시글이 게시판에 등록되었어요!");
+    };
+  }
+
+  wrap.querySelectorAll("[data-toggle]").forEach(row=>{
+    row.onclick=()=>{
+      const pid=row.dataset.toggle;
+      CB_STATE.openId=(CB_STATE.openId===pid)?null:pid;
+      renderCommunityBoard();
+    };
+  });
+
+  wrap.querySelectorAll("[data-like]").forEach(btn=>{
+    btn.onclick=e=>{
+      e.stopPropagation();
+      const pid=btn.dataset.like;
+      let likes={};try{likes=JSON.parse(localStorage.getItem("jade_cb_likes")||"{}")}catch(err){}
+      likes[pid]=!likes[pid];
+      try{localStorage.setItem("jade_cb_likes",JSON.stringify(likes))}catch(err){}
+      renderCommunityBoard();
+      if(likes[pid])toast("👍 게시글에 공감했어요!");
+    };
+  });
+
+  wrap.querySelectorAll("[data-jump-sgg]").forEach(btn=>{
+    btn.onclick=e=>{
+      e.stopPropagation();
+      const sgg=btn.dataset.jumpSgg;
+      if(sgg&&SGG[sgg]){
+        S.region="all";S.sgg=sgg;S.page=0;
+        const selEl=$("#sgg");if(selEl)selEl.value=sgg;
+        render();
+      }
+      const listEl=$("#list-sec");
+      if(listEl)listEl.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+  });
+
+  wrap.querySelectorAll(".cb-reply-form").forEach(f=>{
+    f.onsubmit=e=>{
+      e.preventDefault();
+      const pid=f.dataset.pid;
+      const inp=f.querySelector(".cb-reply-inp");
+      const txt=(inp&&inp.value||"").trim();
+      if(!txt){toast("댓글 내용을 입력해주세요.");return}
+      let cmtMap={};try{cmtMap=JSON.parse(localStorage.getItem("jade_cb_cmts")||"{}")}catch(err){}
+      if(!cmtMap[pid])cmtMap[pid]=[];
+      cmtMap[pid].unshift({
+        id:"rc"+Date.now(),
+        nick:getMyNick(),
+        badge:"실시간 댓글",
+        time:"방금 전",
+        txt
+      });
+      try{localStorage.setItem("jade_cb_cmts",JSON.stringify(cmtMap))}catch(err){}
+      renderCommunityBoard();
+      toast("💬 게시판 댓글이 등록되었어요!");
+    };
+  });
+
+  const moreBtn=$("#cb-more-btn");
+  if(moreBtn)moreBtn.onclick=()=>{CB_STATE.limit+=6;renderCommunityBoard()};
+}
+
+function initCommunityBoard(){
+  renderCommunityBoard();
+}
 
 init();
