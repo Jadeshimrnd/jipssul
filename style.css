@@ -3883,3 +3883,10 @@ body.noscroll {
     padding: 0 12px 12px;
   }
 }
+
+.logo .ic{background:none!important;box-shadow:none!important;width:auto!important;height:28px!important;padding:0!important;border-radius:0!important;display:inline-flex;align-items:center}
+.logo .ic .lm{height:28px;width:auto;display:block}
+.logo .ic .lm-d{display:none}
+[data-theme=dark] .logo .ic .lm-l{display:none}
+[data-theme=dark] .logo .ic .lm-d{display:block}
+@media (max-width:720px){.logo .ic,.logo .ic .lm{height:24px!important}}
