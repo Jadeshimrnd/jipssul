@@ -1363,3 +1363,5 @@ function initCommunityBoard(){
 }
 
 init();
+
+document.addEventListener("click",e=>{const a=e.target.closest("[data-toast]");if(!a)return;e.preventDefault();toast(a.dataset.toast)});
