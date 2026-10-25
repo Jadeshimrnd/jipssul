@@ -78,7 +78,7 @@ const rec=c.recent||[],first=((c.series||[])[0]||{}).month||"9999-99";
 const avail=PERS.map(([n],k)=>k<3||first<lastMonths(PERS[k-1][0]).pop());
 el.innerHTML=`<div class="loc">${SGG[c.sgg]} · ${c.dong}</div><h2>${c.name}</h2><div class="muted">전용 ${band(c.band)} · 누적 ${(c.count||0).toLocaleString()}건${c.rep?'<span class="chip">★ 대표 단지 후보</span>':""}</div>
 <div class="big">${eok(c.price)}${pill(c.change)}<span class="muted">최근 3개월 vs 직전 3개월 중위가</span></div>
-${c.jeonse!=null||c.jeonse_ratio!=null?`<div class="jst"><div><small>전세 중위가</small><b>${eok(c.jeonse)}</b></div><div><small>전세가율</small><b>${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(1)+"%"}</b></div><span class="muted">최근 6개 완결 월 기준</span></div>`:""}
+${c.jeonse!=null||c.jeonse_ratio!=null?`<div class="jst"><div><small>전세 중위가</small><b>${eok(c.jeonse)}</b></div><div><small>전세가율 <span class="jr-obs">관측</span> <button type="button" class="jr-info" aria-label="전세가율 설명 열기" aria-haspopup="dialog">?</button></small><b>${c.jeonse_ratio==null?"-":c.jeonse_ratio.toFixed(1)+"%"}</b></div><span class="muted">최근 6개 완결 월 기준</span><p class="jr-note">전세가율은 실수요 하방 참고치이며, 매수 추천이 아닙니다.</p></div>`:""}
 <div class="per"><span class="pb">${PERS.map(([n,l],k)=>`<button data-n="${n}" class="${S.per===n?"on":""}" ${avail[k]?"":"disabled title='이 기간까지의 거래 기록이 없어요'"}>${l}</button>`).join("")}</span><span class="lg"><span class="jl2">— 매매 중위가</span>${S.per<=6?' &nbsp;<span class="tdot">●</span> 개별 거래':""}${(c.jeonse_series||[]).length?'&nbsp; <span class="jl">- - 전세 중위가</span>':""} &nbsp; ▮ 거래량</span></div>
 <div id="chart"></div>
 <div id="cx-talk" class="cx-talk"></div>
@@ -1365,3 +1365,36 @@ function initCommunityBoard(){
 init();
 
 document.addEventListener("click",e=>{const a=e.target.closest("[data-toast]");if(!a)return;e.preventDefault();toast(a.dataset.toast)});
+
+/* 전세가율 설명 패널 */
+(function(){
+  let pop=null,last=null;
+  function build(){
+    pop=document.createElement("div");pop.className="jr-pop";pop.id="jr-pop";pop.setAttribute("role","dialog");pop.setAttribute("aria-modal","false");pop.setAttribute("aria-labelledby","jr-pop-t");pop.hidden=true;
+    document.body.appendChild(pop);
+  }
+  function fill(){
+    const d=(window.UPDATED||"").toString()||"사이트 업데이트 표기 기준";
+    pop.innerHTML=`<div class="jr-grab" aria-hidden="true"></div><div class="jr-hd"><h4 id="jr-pop-t">전세가율이란?</h4><button type="button" class="jr-x" aria-label="닫기">✕</button></div>
+<p class="jr-def"><span class="jr-tag obs">관측</span> 같은 단지·면적대에서 최근 전세 실거래 ÷ 매매 실거래 (근사).</p>
+<div class="jr-sec"><span class="jr-tag int">읽는 법 · 해석</span><ul><li><b>높을수록</b> 전세가 매매에 가깝다 → 매수 하방·실수요 참고</li><li><b>낮을수록</b> 전세와 매매 간격이 크다</li></ul></div>
+<p class="jr-warn">면적·층 매칭은 근사입니다. 월세 비중이 큰 단지는 해석에 주의하세요. 매수 추천이 아닙니다.</p>
+<p class="jr-src">출처: 국토교통부 아파트 매매·전월세 실거래 · 기준일: ${d.replace(/[<>&]/g,"")}</p>`;
+  }
+  function place(btn){
+    if(matchMedia("(max-width:720px)").matches){pop.classList.add("sheet");pop.style.left=pop.style.top="";return}
+    pop.classList.remove("sheet");
+    const r=btn.getBoundingClientRect(),w=Math.min(340,innerWidth-24);pop.style.width=w+"px";
+    let x=Math.min(Math.max(12,r.left+r.width/2-w/2),innerWidth-w-12);
+    let y=r.bottom+8+scrollY; const ph=pop.offsetHeight;
+    if(r.bottom+8+ph>innerHeight&&r.top-8-ph>0)y=r.top-8-ph+scrollY;
+    pop.style.left=x+"px";pop.style.top=y+"px";
+  }
+  function open(btn){if(!pop)build();fill();last=btn;pop.hidden=false;btn.setAttribute("aria-expanded","true");place(btn);document.body.classList.toggle("jr-lock",pop.classList.contains("sheet"));pop.querySelector(".jr-x").focus()}
+  function close(){if(!pop||pop.hidden)return;pop.hidden=true;document.body.classList.remove("jr-lock");if(last){last.setAttribute("aria-expanded","false");last.focus();}}
+  document.addEventListener("click",e=>{const b=e.target.closest(".jr-info");if(b){e.preventDefault();e.stopPropagation();(pop&&!pop.hidden&&last===b)?close():open(b);return}
+    if(pop&&!pop.hidden&&(e.target.closest(".jr-x")||!e.target.closest("#jr-pop")))close()},true);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+  addEventListener("resize",()=>{if(pop&&!pop.hidden&&last)place(last)});
+  window.openJeonseInfo=open;
+})();
