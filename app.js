@@ -516,7 +516,7 @@ function renderCxTalk(c){
   };
 }
 
-function renderMonoCta(c){
+function renderMonoCta(c){return; // 유료 CTA 보류
   const box=$("#mono-cta");if(!box||!c)return;
   box.innerHTML=`
     <div class="mcard report">
@@ -575,7 +575,7 @@ function renderReportModal(){
   }else{
     body.innerHTML=`
       <div class="rperks">
-        <b>🔔 제이드홈 PRO 실시간 시그널 멤버십 혜택 (첫달 무료 체험)</b><br>
+        <b>🔔 집썰 PRO 실시간 시그널 멤버십 혜택 (첫달 무료 체험)</b><br>
         1) <b>${esc(cLabel)}</b> 등 관심단지 신규 실거래·신고가 즉시 알림<br>
         2) 서울→경기 키맞추기 거래량 급증 단지 주간 스크리닝 리포트<br>
         3) 전세가율 65% 돌파 실거주 진입 후보 단지 실시간 브리핑
@@ -610,7 +610,7 @@ function renderReportModal(){
     toast(R_MODE==="report"?"🎉 1:1 매수 비교 리포트 신청이 접수되었어요!":"🔔 PRO 실시간 시그널 알림 신청이 완료되었어요!");
   };
 }
-function openReportModal(mode,cx){
+function openReportModal(mode,cx){return; // 유료 상품 보류
   if(mode)R_MODE=mode;
   if(cx)window.CUR_CX=cx;
   renderReportModal();

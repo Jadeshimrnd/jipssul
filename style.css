@@ -3065,7 +3065,7 @@ body.noscroll {
   /* Fixed Bottom App Navigation Bar (#bnav) */
   .bnav {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     position: fixed;
     left: 0;
     right: 0;
@@ -3890,3 +3890,30 @@ body.noscroll {
 [data-theme=dark] .logo .ic .lm-l{display:none}
 [data-theme=dark] .logo .ic .lm-d{display:block}
 @media (max-width:720px){.logo .ic,.logo .ic .lm{height:24px!important}}
+
+/* ===== 광고/파트너 슬롯 ===== */
+.ad-slot{margin:16px 0}
+.ad-slot-a .ad-in{display:flex;align-items:center;gap:14px;min-height:80px;box-sizing:border-box;padding:14px 18px;border:1px dashed #c9c2b3;border-radius:16px;background:#f6f3ec;color:#4a4740}
+.ad-badge{flex:none;display:inline-block;font-size:12px;font-weight:700;line-height:1;padding:5px 8px;border-radius:6px;background:#222;color:#fff}
+.ad-txt{flex:1;display:flex;flex-direction:column;gap:3px;font-size:14px}.ad-txt b{font-size:15px;color:#2a2823}
+.ad-cta{flex:none;font-size:13px;font-weight:600;padding:10px 16px;border:1px solid #8a8478;border-radius:10px;color:#2a2823;text-decoration:none;background:transparent;min-height:40px;box-sizing:border-box;display:inline-flex;align-items:center}
+.ad-micro{margin:6px 4px 0;font-size:12px;color:#77726a}
+.ad-slot-b{position:relative;display:flex;align-items:center;gap:16px;padding:34px 18px 16px;border:1px solid #ddd6c8;border-radius:16px;background:#fbf9f4;color:#4a4740}
+.ad-slot-b .ad-badge{position:absolute;top:10px;left:12px}
+.adb-body{flex:1}.adb-body h4{margin:0 0 4px;font-size:16px;color:#2a2823}.adb-body p{margin:0;font-size:13px;color:#6b665d}
+.adb-cta{flex:none;min-height:40px;padding:0 18px;border:1px solid #8a8478;border-radius:10px;background:transparent;color:#6b665d;font-weight:600;font-size:13px;cursor:not-allowed}
+[data-theme="dark"] .ad-slot-a .ad-in,body.dark .ad-slot-a .ad-in{background:#1f2126;border-color:#4a4d55;color:#c9cbd1}
+[data-theme="dark"] .ad-slot-b,body.dark .ad-slot-b{background:#1c1e23;border-color:#3d4048;color:#c9cbd1}
+[data-theme="dark"] .ad-txt b,[data-theme="dark"] .adb-body h4,[data-theme="dark"] .ad-cta,body.dark .ad-txt b,body.dark .adb-body h4,body.dark .ad-cta{color:#f1f2f4}
+[data-theme="dark"] .ad-badge,body.dark .ad-badge{background:#f1f2f4;color:#111}
+[data-theme="dark"] .ad-micro,[data-theme="dark"] .adb-body p,[data-theme="dark"] .adb-cta,body.dark .ad-micro,body.dark .adb-body p,body.dark .adb-cta{color:#a3a6ad}
+[data-theme="dark"] .ad-cta,[data-theme="dark"] .adb-cta,body.dark .ad-cta,body.dark .adb-cta{border-color:#6b6e76}
+@media (max-width:720px){
+ .ad-slot-a{margin:12px 16px}.ad-slot-a .ad-in{min-height:64px;padding:10px 12px;gap:10px}
+ .ad-txt{font-size:12.5px}.ad-txt b{font-size:14px}.ad-cta{padding:8px 12px;font-size:12.5px}
+ .ad-slot-b{flex-direction:column;align-items:stretch;gap:10px;padding:34px 14px 14px}
+ .adb-cta{width:100%}
+}
+.cb-cat-btn.on{background:#1f1f1f!important;color:#fff!important;border-color:#1f1f1f!important}
+[data-theme="dark"] .cb-cat-btn.on{background:#f1f2f4!important;color:#111!important;border-color:#f1f2f4!important}
+.cb-cat-btn.on .cb-cat-cnt{color:inherit;opacity:.8}

@@ -2,7 +2,7 @@
 <title>집썰 — 집에 관한 모든 썰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261024090000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=20261025170000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
 <meta name="theme-color" id="meta-theme" content="#3182F6">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,6 +32,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 <div class="kpi-card up-card"><div class="kpi-top"><h4>상승 단지</h4><span class="kpi-ic up">▲</span></div><div class="kpi-val"><b id="k-up" class="up">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
 <div class="kpi-card down-card"><div class="kpi-top"><h4>하락 단지</h4><span class="kpi-ic down">▼</span></div><div class="kpi-val"><b id="k-down" class="down">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
 <div class="kpi-card rep-card"><div class="kpi-top"><h4>대표 단지 후보</h4><span class="kpi-ic gold">★</span></div><div class="kpi-val"><b id="k-rep">-</b><small>개</small></div><p>거래 20건↑·최근 꾸준히 거래</p></div></section>
+<aside class="ad-slot ad-slot-a" aria-label="광고"><div class="ad-in"><span class="ad-badge">광고</span><div class="ad-txt"><b>파트너 모집 중</b><span>주담대·지역중개 문의</span></div><a class="ad-cta" href="mailto:?subject=%EC%A7%91%EC%8D%B0%20%EA%B4%91%EA%B3%A0%20%EC%A0%9C%EC%95%88">제안하기</a></div><p class="ad-micro">이 영역은 광고입니다. 위 수치는 국토부 실거래 관측과 무관합니다.</p></aside>
 <section class="two"><div class="card" id="senti"><div class="ch"><h3>지금, 시장의 마음</h3><span class="tag">준비 중</span></div><p class="muted">시장 심리 요약은 준비 중이에요.</p></div>
 <div class="card" id="rentc"><div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag">준비 중</span></div><p class="muted">전월세 실거래가 연동 후 표시돼요.</p></div></section>
 <section class="card lounge-sec" id="lounge-sec">
@@ -47,6 +48,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
     <div class="vs-arena" id="vs-arena"></div>
     <div class="lounge-chat" id="lounge-chat"></div>
   </div>
+  <aside class="ad-slot ad-slot-b" aria-label="파트너 광고"><span class="ad-badge">파트너</span><div class="adb-body"><h4>관심 지역 매수 전, 상담이 필요할 때</h4><p>임장·매물 상담 파트너를 준비 중이에요</p></div><button type="button" class="adb-cta" disabled>곧 공개</button></aside>
   <div class="cboard-wrap" id="community-board" aria-label="실시간 내집마련·갈아타기 커뮤니티 게시판"></div>
 </section>
 <section class="card" id="movers-sec"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
@@ -63,27 +65,12 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </main>
 <div id="favpanel" class="favpanel"><div id="favdim" class="favdim"></div><div class="favbox"><div class="ch"><h3>관심지역 고르기</h3><span id="favsel" class="tag"></span><button id="favclose" class="favx" aria-label="닫기">✕</button></div>
 <p class="muted sm">시·구를 최대 5곳까지 담을 수 있어요. 이 기기에 저장돼요.</p><input id="favq" placeholder="⌕  지역 이름으로 찾기 (예: 안양, 분당)"><div id="favlist" class="favlist"></div></div></div>
-<div id="report-modal" class="rmodal" aria-hidden="true">
-  <div id="rdim" class="favdim"></div>
-  <div class="rbox" role="dialog" aria-labelledby="rtitle">
-    <div class="ch">
-      <h3 id="rtitle">👑 집썰 프리미엄 의사결정 라운지</h3>
-      <button type="button" id="rclose" class="favx" aria-label="닫기">✕</button>
-    </div>
-    <div class="rtabs" id="rtabs">
-      <button type="button" data-m="report" class="on">📊 1:1 매수 비교 리포트 <small>얼리버드 19,000원</small></button>
-      <button type="button" data-m="pro">🔔 PRO 실시간 시그널 알림 <small>첫달 무료 · 월 4,900원</small></button>
-    </div>
-    <div id="rbody" class="rbody"></div>
-  </div>
-</div>
 <nav id="bnav" class="bnav" aria-label="모바일 하단 앱 메뉴">
   <button type="button" data-nav="top" class="bnav-btn on"><span class="bi">🏠</span><span>홈·시황</span></button>
   <button type="button" data-nav="list" class="bnav-btn"><span class="bi">🔍</span><span>단지탐색</span></button>
   <button type="button" data-nav="lounge" class="bnav-btn"><span class="bi">💬</span><span>라운지</span></button>
   <button type="button" data-nav="fav" class="bnav-btn"><span class="bi">⭐</span><span>관심지역</span></button>
-  <button type="button" data-nav="pro" class="bnav-btn pro"><span class="bi">👑</span><span>비교리포트</span></button>
 </nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>집썰</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가</span></footer>
-<script src="app.js?v=20261024090000"></script></body></html>
+<script src="app.js?v=20261025170000"></script></body></html>
