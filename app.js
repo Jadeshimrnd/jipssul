@@ -1517,13 +1517,14 @@ function gmLabels(){if(!GM.lay||!GM.map)return;const z=GM.map.getZoom(),full=GM.
     if(hit(r)&&!el.classList.contains("gm-nopct")){el.classList.add("gm-nopct");r=rc(l,el)}
     if(hit(r)){el.classList.add("gm-hide");return}placed.push(r)})}
 function gmGo(c){GM.city=c;gmDraw();if(GM.tl)GM.tl.setOpacity(c?.35:1);GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});if(!c)$("#gm-info").textContent=GM.tab==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
-function gmTab(t){GM.tab=t;gmTabs();GM.city=null;gmDraw();GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});$("#gm-info").textContent=t==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
+function gmMask(){if(GM.mask)GM.mask.remove();if(GM.tol)GM.tol.remove();const world=[[90,-180],[90,180],[-90,180],[-90,-180]],holes=[],fc=gmL1();
+  fc.features.forEach(f=>{const g=f.geometry;(g.type==="Polygon"?[g.coordinates]:g.coordinates).forEach(p=>holes.push(p[0].map(([x,y])=>[y,x])))});
+  GM.mask=L.polygon([world,...holes],{stroke:false,fillOpacity:1,fillColor:isDark()?"#0B0F19":"#ffffff",className:"gm-mask",interactive:false,pane:"gmMaskPane"}).addTo(GM.map);
+  GM.tol=L.geoJSON(fc,{style:{fill:false,weight:1.2,color:"#6b7280"},interactive:false}).addTo(GM.map)}
+function gmTab(t){GM.tab=t;gmTabs();GM.city=null;gmMask();gmDraw();GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});$("#gm-info").textContent=t==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
 async function initGGMap(){if(GM.map||!window.L||!$("#gm-map"))return;gmRenderPd();
-  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026123000`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
+  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026124500`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
   const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:7,maxZoom:13,scrollWheelZoom:true,wheelPxPerZoomLevel:120,attributionControl:true});m.on("zoomend",()=>requestAnimationFrame(gmLabels));
-  GM.tl=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
-  const world=[[90,-180],[90,180],[-90,180],[-90,-180]],holes=[];const g=GM.geo.outline;
-  (g.type==="Polygon"?[g.coordinates]:g.coordinates).forEach(p=>p.forEach(r=>holes.push(r.map(([x,y])=>[y,x]))));
-  GM.mask=L.polygon([world,...holes],{stroke:false,fillOpacity:1,fillColor:"var(--bg)",className:"gm-mask",interactive:false}).addTo(m);
-  GM.ol=L.geoJSON(g,{style:{fill:false,weight:1.5,color:"#6b7280"},interactive:false}).addTo(m);
+  m.createPane("gmMaskPane").style.zIndex=350;GM.tl=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
+  GM.ol=L.geoJSON(GM.geo.outline,{style:{fill:false,weight:0,opacity:0},interactive:false});
   m.setMaxBounds(GM.ol.getBounds().pad(.3));document.querySelectorAll("#gm-tabs button").forEach(b=>b.onclick=()=>gmTab(b.dataset.t));gmTab(GM.tab)}
