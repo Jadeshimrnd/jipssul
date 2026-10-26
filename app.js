@@ -34,7 +34,7 @@ async function init(){
   initReportModal();
   initBottomNav();
   let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-  window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;applyPd();renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
+  window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;computeLink();applyPd();renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
   fillSgg();renderFavBar();$("#favbtn").onclick=()=>openFav();$("#favclose").onclick=closeFav;$("#favdim").onclick=closeFav;$("#favq").oninput=renderFavPick;
   document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render();if(S.region==="fav"&&!FAV.length)openFav()});
   $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
@@ -222,11 +222,11 @@ el.innerHTML=`<div class="ch"><h3>전·월세 거래 흐름</h3><span class="tag
 
 // ---------- PHASE 2: 1. 상단 실시간 한줄 수다 티커 바 ----------
 const TICKER_ITEMS=[
-  {tag:"[핫토픽 🔥]",text:"자금 부족할수록 징검다리 지금 등기 vs 전세 연장 후 관망, 실거주자 선택은?",meta:"(댓글 38개) →",target:"#community-board",post:"p1"},
-  {tag:"[밸런스 투표]",text:"9억 예산 실거주: 마포·성동 구축 59㎡ vs 분당·수지 준신축 84㎡",meta:"(222명 투표 중) →",target:"#lounge-sec",match:"m1"},
-  {tag:"[입지 빅매치]",text:"광명 철산역 대장 vs 광명뉴타운 신축 vs 강동·미사 84㎡ 실거주 가성비 비교",meta:"(댓글 34개) →",target:"#community-board",post:"p2"},
-  {tag:"[현장 팩트체크]",text:"신분당선 수지(성복·풍덕천) & 수원 화서역 스타필드 브릿지 도보 임장 체감기",meta:"(댓글 29개) →",target:"#community-board",post:"p4"},
-  {tag:"[정책·규제]",text:"토허제 해제 이후 잠실·대치·삼성 호가 흐름과 인접 비규제 키맞추기 시차 분석",meta:"(댓글 31개) →",target:"#community-board",post:"p6"},
+  {tag:"[핫토픽 🔥]",text:"자금 부족할수록 징검다리 지금 등기 vs 전세 연장 후 관망, 실거주자 선택은?",meta:"→",target:"#community-board",post:"p1"},
+  {tag:"[밸런스 투표]",text:"9억 예산 실거주: 마포·성동 구축 59㎡ vs 분당·수지 준신축 84㎡",meta:"→",target:"#lounge-sec",match:"m1"},
+  {tag:"[입지 빅매치]",text:"광명 철산역 대장 vs 광명뉴타운 신축 vs 강동·미사 84㎡ 실거주 가성비 비교",meta:"→",target:"#community-board",post:"p2"},
+  {tag:"[현장 팩트체크]",text:"신분당선 수지(성복·풍덕천) & 수원 화서역 스타필드 브릿지 도보 임장 체감기",meta:"→",target:"#community-board",post:"p4"},
+  {tag:"[정책·규제]",text:"토허제 해제 이후 잠실·대치·삼성 호가 흐름과 인접 비규제 키맞추기 시차 분석",meta:"→",target:"#community-board",post:"p6"},
   {tag:"[서울→경기 시그널]",text:"서울 상급지 숨고르기 속 안양 평촌·수원 영통·수지 84㎡ 거래량 반등",meta:"(키맞추기 비교) →",target:"#lounge-sec",match:"m2"}
 ];
 let T_IDX=0,T_TMR=null;
@@ -332,7 +332,7 @@ function renderLounge(){
     <div>
       <div class="vs-topic">
         <span class="vs-q">${m.q}</span>
-        <span class="vs-total">🔥 ${vt.toLocaleString()}명 투표 중</span>
+        <span class="vs-total">의견 · 1초 투표</span>
       </div>
       <div class="vs-cards">
         <button type="button" class="vs-card side-a ${myV==="a"?"on":""}" data-s="a">
@@ -377,6 +377,7 @@ function renderLounge(){
       </div>
     </div>
   `;
+  arena.insertAdjacentHTML("beforeend",pairPollHTML());bindPairPoll(arena);
   arena.querySelectorAll(".vs-card").forEach(card=>{
     card.onclick=()=>{
       const s=card.dataset.s;
@@ -395,7 +396,7 @@ function renderLounge(){
   chat.innerHTML=`
     <div>
       <div class="lc-top">
-        <div class="lc-nick">💬 실시간 한줄 수다 · 내 닉네임 <span>${esc(nick)}</span></div>
+        <div class="lc-nick">💬 한줄 의견 · 내 닉네임 <span>${esc(nick)}</span></div>
         <div class="lc-filters">
           <button type="button" data-f="all" class="${L_STATE.f==="all"?"on":""}">전체</button>
           <button type="button" data-f="a" class="${L_STATE.f==="a"?"on":""}">🅰️ 서울파</button>
@@ -411,18 +412,20 @@ function renderLounge(){
               <span class="lc-time">${esc(c.time)}</span>
             </div>
             <div class="lc-body-row">
-              <div class="lc-txt">${esc(c.txt)}</div>
+              <div class="lc-txt">${c.tag?`<span class="lc-tag">${esc(c.tag)}</span> `:""}${esc(c.txt)}</div>
               <button type="button" class="lc-like ${likes[c.id]?"on":""}" data-id="${c.id}">👍 ${lk}</button>
             </div>
           </div>`;
         }).join("")}
       </div>
     </div>
+    <div class="lc-chips" id="lc-chips"><span class="lbl-op">의견</span>${LINK_TAGS.map(t=>`<button type="button" class="chip ${L_STATE.tag===t?"on":""}" data-t="${t}">${t}</button>`).join("")}</div>
     <form class="lc-form" id="lc-form">
       <input id="lc-in" maxlength="80" placeholder="${myV==="b"?"[🅱️ 경기파]":"[🅰️ 서울파]"} 한줄 의견 남기기 (최대 80자)" aria-label="라운지 한줄 의견">
-      <button type="submit">등록</button>
+      <button type="submit" ${L_STATE.tag?"":"disabled"}>등록</button>
     </form>
   `;
+  chat.querySelectorAll("#lc-chips .chip").forEach(b=>b.onclick=()=>{L_STATE.tag=L_STATE.tag===b.dataset.t?null:b.dataset.t;const v=inp.value;renderLounge();const i2=$("#lc-in");if(i2){i2.value=v;i2.focus()}});
   chat.querySelectorAll(".lc-filters button").forEach(b=>b.onclick=()=>{L_STATE.f=b.dataset.f;renderLounge()});
   chat.querySelectorAll(".lc-like").forEach(b=>b.onclick=()=>{
     const cid=b.dataset.id;
@@ -434,9 +437,10 @@ function renderLounge(){
   if(form)form.onsubmit=e=>{
     e.preventDefault();
     const txt=(inp.value||"").trim();
+    if(!L_STATE.tag){toast("연동 태그를 먼저 골라주세요.");return}
     if(!txt){toast("한줄 의견을 입력해주세요.");return}
     const side=myV||"a";
-    const nc={id:"u"+Date.now(),nick:getMyNick(),side,time:"방금 전",txt,likes:1};
+    const nc={id:"u"+Date.now(),nick:getMyNick(),side,time:"방금 전",txt,tag:L_STATE.tag,likes:1};
     userCmts.unshift(nc);
     try{localStorage.setItem("jade_vs_cmts_"+mid,JSON.stringify(userCmts.slice(0,20)))}catch(e){}
     inp.value="";
@@ -444,7 +448,71 @@ function renderLounge(){
     toast("💬 라운지에 내 한줄 의견이 등록되었어요!");
   };
 }
-function initLounge(){renderLounge()}
+function initLounge(){renderLounge();renderLink()}
+// ---------- 서울→경기 연동 (관측) · 따라가기 페어 · 주간 체감(의견) ----------
+const LINK_LAG_MONTHS=4;
+const LINK_TAGS=["#서울선행","#경기후행","#동시","#무관"];
+const PAIR_SEOUL={"11440":"마포","11200":"성동","11680":"강남","11650":"서초","11710":"송파","11590":"동작","11560":"영등포","11170":"용산"};
+const PAIR_GG={"41117":"수원 영통","41135":"성남 분당","41465":"용인 수지","41173":"안양 동안","41210":"광명","41450":"하남","41285":"고양 일산동구","41463":"용인 기흥"};
+const LINK={seoul:4.7,gg:3.1,ns:0,ng:0,src:"default",pw:{}};
+function med(a){a=a.filter(v=>v!=null&&isFinite(v)).sort((x,y)=>x-y);if(!a.length)return null;const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function pchg(c,i){return c&&c.p&&c.p[i]?c.p[i][1]:null}
+function computeLink(){
+  try{
+    const s=[],g=[];ALL.forEach(c=>{const v=pchg(c,3);if(v==null)return;if(String(c.sgg).startsWith("11"))s.push(v);else if(String(c.sgg).startsWith("41"))g.push(v)});
+    const ms=med(s),mg=med(g);if(ms!=null&&mg!=null){LINK.seoul=Math.round(ms*10)/10;LINK.gg=Math.round(mg*10)/10;LINK.ns=s.length;LINK.ng=g.length;LINK.src="live"}
+    const by={};ALL.forEach(c=>{const v=pchg(c,0);if(v==null)return;(by[c.sgg]=by[c.sgg]||[]).push(v)});
+    Object.keys(by).forEach(k=>{const m=med(by[k]);if(m!=null)LINK.pw[k]=Math.round(m*10)/10});
+  }catch(e){}
+  renderLink();
+}
+function getPair(){let p=null;try{p=JSON.parse(localStorage.getItem("jipssul_follow_pair")||"null")}catch(e){}return p&&PAIR_SEOUL[p.s]&&PAIR_GG[p.g]?p:{s:"11440",g:"41117",on:false}}
+function setPair(p){try{localStorage.setItem("jipssul_follow_pair",JSON.stringify(p))}catch(e){}}
+function fmtPct(v){return v==null?"—":(v>0?"+":"")+v.toFixed(1)+"%"}
+function pcls(v){return v==null?"":v>0?"up":v<0?"down":""}
+function renderLink(){
+  const p=getPair(),gName=PAIR_GG[p.g],sName=PAIR_SEOUL[p.s];
+  const strip=$("#link-strip");
+  if(strip)strip.innerHTML=`<span class="lbl-ob">국토부 실거래 · 관측</span>
+    <span class="ls-item">서울 90일 <b class="${pcls(LINK.seoul)}">${fmtPct(LINK.seoul)}</b></span>
+    <span class="ls-item">경기 90일 <b class="${pcls(LINK.gg)}">${fmtPct(LINK.gg)}</b></span>
+    <span class="ls-lag">시차 힌트 · 약 ${LINK_LAG_MONTHS}개월</span>`;
+  const pl=$("#pair-line");
+  if(pl){const a=LINK.pw[p.s],b=LINK.pw[p.g];pl.innerHTML=`<b>★ 내 페어 · 지난주 대비</b> ${sName} <i class="${pcls(a)}">${fmtPct(a)}</i> → ${gName} <i class="${pcls(b)}">${fmtPct(b)}</i>`;pl.onclick=()=>{const l=$("#lounge-sec");if(l)l.scrollIntoView({behavior:"smooth"})}}
+  const sc=$("#story-card");
+  if(sc){const gv=LINK.pw[p.g]!=null&&p.on?null:null;
+    sc.innerHTML=`<div class="st-col"><div class="st-h">서울 관측 <span class="lbl-ob">관측</span></div><div class="st-big ${pcls(LINK.seoul)}">${fmtPct(LINK.seoul)}</div><p class="st-sub">최근 90일 중간값 등락${LINK.ns?` · ${LINK.ns.toLocaleString()}개 단지`:""}</p></div>
+    <div class="st-mid"><div class="st-h">서울 → 경기 연동 스토리 <span class="st-lag">선행 약 ${LINK_LAG_MONTHS}개월 →</span></div>
+      <svg viewBox="0 0 220 70" class="st-svg" aria-hidden="true"><path d="M5 60 C60 55 70 20 120 15 S190 10 215 8" class="st-s"/><path d="M5 64 C70 62 100 50 140 35 S195 22 215 18" class="st-g"/><line x1="120" y1="15" x2="168" y2="27" class="st-lagln"/><text x="130" y="11" class="st-t">≈${LINK_LAG_MONTHS}개월</text></svg>
+      <div class="st-leg">── 서울 · - - 경기(${esc(gName)})</div></div>
+    <div class="st-col"><div class="st-h">내 관심지역 후행</div><p class="st-sub">${esc(gName)}${p.on?" · 내 페어":""}</p><div class="st-big ${pcls(LINK.gg)}">${fmtPct(LINK.gg)}</div><p class="st-sub">경기 90일 중간값 · 서울 대비 시차 약 ${LINK_LAG_MONTHS}개월 · 관측</p></div>
+    <p class="st-foot">국토부 실거래 관측 · 투자 추천 아님</p>`}
+}
+function pairPollHTML(){
+  const p=getPair();let pv=null;try{pv=localStorage.getItem("jipssul_link_poll_"+weekKey())}catch(e){}
+  const opt=(k,t)=>`<button type="button" class="chip ${pv===k?"on":""}" data-pv="${k}">${t}</button>`;
+  return `<div class="pair-box">
+    <div class="pair-row"><span class="pair-lbl">따라가기 페어</span>
+      <button type="button" class="chip pair-tg ${p.on?"on":""}" id="pair-tg">${p.on?"★":"☆"} ${PAIR_SEOUL[p.s]} ↔ ${PAIR_GG[p.g]}</button>
+      <button type="button" class="chip" id="pair-chg">+ 페어 변경</button>
+      <span class="pair-note">관심지역(최대 5)과 별개 · 서울1+경기1</span></div>
+    <div class="pair-pick hide" id="pair-pick">
+      <select id="pp-s" aria-label="서울 지역">${Object.entries(PAIR_SEOUL).map(([k,v])=>`<option value="${k}" ${k===p.s?"selected":""}>서울 ${v}</option>`).join("")}</select>
+      <span>↔</span>
+      <select id="pp-g" aria-label="경기 지역">${Object.entries(PAIR_GG).map(([k,v])=>`<option value="${k}" ${k===p.g?"selected":""}>경기 ${v}</option>`).join("")}</select>
+      <button type="button" class="chip on" id="pp-ok">저장</button></div>
+    <div class="pair-row poll-row"><span class="lbl-op">의견</span><span class="poll-q">이번 주 경기가 따라왔나?</span>
+      ${opt("already","이미 따라옴")}${opt("quiet","아직 조용")}${opt("unsure","잘 모르겠음")}</div></div>`;
+}
+function weekKey(){const d=new Date(),o=new Date(d.getFullYear(),0,1);return d.getFullYear()+"w"+Math.ceil(((d-o)/864e5+o.getDay()+1)/7)}
+function bindPairPoll(root){
+  const p=getPair();
+  const tg=root.querySelector("#pair-tg");if(tg)tg.onclick=()=>{p.on=!p.on;setPair(p);renderLounge();renderLink();toast(p.on?"★ 따라가기 페어를 켰어요":"따라가기 페어를 껐어요")};
+  const ch=root.querySelector("#pair-chg");if(ch)ch.onclick=()=>root.querySelector("#pair-pick").classList.toggle("hide");
+  const ok=root.querySelector("#pp-ok");if(ok)ok.onclick=()=>{setPair({s:root.querySelector("#pp-s").value,g:root.querySelector("#pp-g").value,on:true});renderLounge();renderLink();toast("페어를 저장했어요")};
+  root.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{try{localStorage.setItem("jipssul_link_poll_"+weekKey(),b.dataset.pv)}catch(e){}renderLounge();toast("이번 주 체감(의견)이 저장됐어요")});
+}
+
 
 // ---------- PHASE 2: 4. 단지 상세 팩트체크 톡 & 네이티브 수익화 CTA ----------
 function strHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return Math.abs(h)}

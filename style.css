@@ -3953,3 +3953,29 @@ body.noscroll {
  body.jr-lock::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:4999}
  .jr-info{width:22px;height:22px;min-width:22px}
 }
+/* ===== 서울→경기 연동 (관측/의견) ===== */
+.lbl-ob,.lbl-op{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.lbl-ob{background:#e8f1ff;color:#2563eb}.lbl-op{background:#fff4e0;color:#b45309}
+[data-theme=dark] .lbl-ob{background:#1e2c48;color:#8ab4ff}[data-theme=dark] .lbl-op{background:#3a2a10;color:#f5b74e}
+.link-strip{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px 0;padding:12px 14px;border:1px solid #bfd5ff;background:#f3f8ff;border-radius:14px;font-size:14px}
+[data-theme=dark] .link-strip{background:#152036;border-color:#2a3d63}
+.link-strip b{font-size:15px;margin-left:4px}.ls-lag{color:var(--muted,#888);font-size:12px}
+b.up,i.up,.st-big.up{color:#e5484d}b.down,i.down,.st-big.down{color:#2f6fed}
+.pair-line{font-size:13px;white-space:nowrap;cursor:pointer;margin-right:10px}.pair-line i{font-style:normal;font-weight:700}
+.pair-box{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.pair-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
+.pair-lbl{color:var(--muted,#888)}.pair-note{font-size:11px;color:var(--muted,#888)}.poll-q{margin-right:4px}
+.chip{border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chip.on{background:#e8f1ff;border-color:#2563eb;color:#2563eb;font-weight:700}
+[data-theme=dark] .chip.on{background:#1e2c48;color:#8ab4ff;border-color:#4b7bd8}
+.pair-pick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pair-pick select{padding:5px;border-radius:8px}.hide{display:none!important}
+.lc-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.lc-form button[disabled]{opacity:.4;cursor:not-allowed}
+.lc-tag{color:#2563eb;font-weight:700;font-size:12px}
+.story-card{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:16px;align-items:center;padding:18px 20px}
+.st-h{font-weight:800;font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.st-lag{font-weight:500;font-size:12px;color:var(--muted,#888)}
+.st-big{font-size:28px;font-weight:800;margin:6px 0}.st-sub{font-size:12px;color:var(--muted,#888);margin:2px 0}
+.st-svg{width:100%;height:80px}.st-s{fill:none;stroke:#e5484d;stroke-width:3}.st-g{fill:none;stroke:#2f6fed;stroke-width:3;stroke-dasharray:6 5}
+.st-lagln{stroke:#999;stroke-dasharray:3 3}.st-t{font-size:9px;fill:#999}.st-leg{font-size:11px;color:var(--muted,#888);text-align:center}
+.st-foot{grid-column:1/-1;font-size:11px;color:var(--muted,#888);margin:0}
+@media(max-width:760px){.story-card{grid-template-columns:1fr 1fr}.st-mid{grid-column:1/-1;order:3}.st-big{font-size:22px}.pair-line{font-size:12px}.link-strip{font-size:13px}}

@@ -2,7 +2,7 @@
 <title>집썰 — 집에 관한 모든 썰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026090000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=20261026110000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
 <meta name="theme-color" id="meta-theme" content="#3182F6">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 <nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a><a data-r="fav">★ 관심지역</a></nav>
 <div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated" class="upd-date"></span><button id="theme-toggle" class="theme-btn" type="button" aria-label="테마 전환">🌙 다크</button></div></div></header>
 <main class="wrap">
-<div class="live-ticker" id="live-ticker" role="region" aria-label="실시간 커뮤니티 라운지 티커">
-  <span class="lt-badge"><span class="lt-dot"></span>🔥 실시간 라운지</span>
+<div class="live-ticker" id="live-ticker" role="region" aria-label="커뮤니티 라운지 티커">
+  <span class="pair-line" id="pair-line"></span><span class="lt-badge">💬 라운지</span>
   <button type="button" class="lt-item" id="lt-item"></button>
   <div class="lt-ctrl">
     <button type="button" class="lt-nav" id="lt-prev" aria-label="이전 토픽">‹</button>
@@ -27,6 +27,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
   </div>
 </div>
 <section class="hero"><div class="eyebrow"><span class="edot"></span>SEOUL · GYEONGGI · INCHEON · 실거래 트래커</div><h1>서울이 움직일 때, 내 관심 단지는 어디까지 왔을까?</h1><p>국토부 실거래로 서울·경기·인천을 비교하고, 관심 지역만 모아 보세요.</p></section>
+<section class="card story-card" id="story-card" aria-label="서울→경기 연동 스토리"></section>
 <section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="아파트 검색 · 단지명, 동, 지역 (서울·경기·인천)" aria-label="아파트 검색" role="combobox" aria-expanded="false" aria-controls="gres"><span class="gskbd">/ 검색</span><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
 <section class="card kpis"><div class="kpi-card"><div class="kpi-top"><h4>조회 단지</h4><span class="kpi-ic">🏢</span></div><div class="kpi-val"><b id="k-total">-</b><small>개</small></div><p>단지·면적대 기준</p></div>
 <div class="kpi-card up-card"><div class="kpi-top"><h4>상승 단지</h4><span class="kpi-ic up">▲</span></div><div class="kpi-val"><b id="k-up" class="up">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
@@ -38,18 +39,19 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 <section class="card lounge-sec" id="lounge-sec">
   <div class="lounge-head">
     <div class="lounge-title-wrap">
-      <div class="lounge-eyebrow"><span class="lt-dot"></span>COMMUNITY BALANCE LOUNGE · 실시간 민심 비교</div>
+      <div class="lounge-eyebrow"><span class="lt-dot"></span>COMMUNITY LOUNGE · 해석·의견</div>
       <h3>⚡ 이번 주 서울 vs 경기 밸런스 라운지</h3>
-      <p class="muted lounge-sub">같은 예산·다른 선택! 서울 집값 흐름과 경기 핵심지 키맞추기 체감을 함께 비교해보세요</p>
+      <p class="muted lounge-sub">아래 관측 숫자는 국토부 실거래, 투표·한줄은 의견이에요.</p>
     </div>
     <div class="lounge-tabs" id="lounge-tabs" role="tablist" aria-label="밸런스 매치 선택"></div>
   </div>
+  <div class="link-strip" id="link-strip"></div>
   <div class="lounge-grid">
     <div class="vs-arena" id="vs-arena"></div>
     <div class="lounge-chat" id="lounge-chat"></div>
   </div>
   <aside class="ad-slot ad-slot-b" aria-label="파트너 광고"><span class="ad-badge">파트너</span><div class="adb-body"><h4>예산·DSR 먼저 점검하고 단지 고르기</h4><p>임장·매물 상담 파트너를 준비 중이에요. 곧 연결됩니다.</p><p class="ad-micro">이 영역은 광고입니다. 위 수치는 국토부 실거래 관측과 무관합니다.</p></div><button type="button" class="adb-cta" data-toast="파트너 연결 준비 중">곧 연결</button></aside>
-  <div class="cboard-wrap" id="community-board" aria-label="실시간 내집마련·갈아타기 커뮤니티 게시판"></div>
+  <div class="cboard-wrap" id="community-board" aria-label="내집마련·갈아타기 커뮤니티 게시판"></div>
 </section>
 <section class="card" id="movers-sec"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
 <p class="muted sm">거래 20건 이상이고 최근 6개월 중 4개월 이상 거래된 단지 중, 마켓 탐색에서 고른 기간의 양쪽 구간에 거래가 충분한(7·30일 2건, 그 외 3건 이상) 단지만 순위에 포함해요.</p></section>
@@ -74,4 +76,4 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>집썰</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가 · <a href="#" class="foot-partner" data-toast="파트너 문의 채널 준비 중">광고·파트너 문의</a></span></footer>
-<script src="app.js?v=20261026090000"></script></body></html>
+<script src="app.js?v=20261026110000"></script></body></html>
