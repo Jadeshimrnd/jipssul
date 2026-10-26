@@ -1,5 +1,5 @@
 let SGG={"11440":"서울 마포구","11170":"서울 용산구","11110":"서울 종로구","11620":"서울 관악구","11140":"서울 중구","11305":"서울 강북구","41590":"경기 화성시","41310":"경기 구리시","41117":"경기 수원시 영통구","41465":"경기 용인시 수지구","28185":"인천 연수구","28237":"인천 부평구"};
-const $=s=>document.querySelector(s);let ALL=[],S={region:"all",q:"",sgg:"",rep:false,sort:"pc",dir:-1,pd:90,page:0,sel:null,per:12};
+const $=s=>document.querySelector(s);let ALL=[],S={region:"all",q:"",sgg:"",rep:false,favOnly:false,sort:"pc",dir:-1,pd:90,page:0,sel:null,per:12};
 const isDark=()=>document.documentElement.dataset.theme==="dark";
 const band=b=>b==="~50"?"~50㎡":b==="110+"?"110㎡+":b+"㎡";
 const pct=v=>v==null?"-":(v>0?"+":"")+v.toFixed(1)+"%";const cls=v=>v>0?"up":v<0?"down":"";
@@ -37,13 +37,15 @@ async function init(){
   let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
   window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;computeLink();applyPd();renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
   fillSgg();renderFavBar();$("#favbtn").onclick=()=>openFav();$("#favclose").onclick=closeFav;$("#favdim").onclick=closeFav;$("#favq").oninput=renderFavPick;
-  document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");S.region=a.dataset.r;S.page=0;S.sel=null;render();if(S.region==="fav"&&!FAV.length)openFav()});
+  document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");if(a.dataset.view==="community"){setView("community");return}setView("market");S.region=a.dataset.r;S.page=0;S.sel=null;render()});
+  {const fo=$("#favonly");if(fo)fo.onchange=e=>{S.favOnly=e.target.checked;S.page=0;if(S.favOnly&&!FAV.length)openFav();renderList()}}
+  initCommunityView();
   $("#q").oninput=e=>{S.q=e.target.value.trim();S.page=0;renderList()};$("#sgg").onchange=e=>{S.sgg=e.target.value;S.page=0;renderList()};
   $("#rep").onchange=e=>{S.rep=e.target.checked;S.page=0;renderList()};
   document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;S.dir=S.sort===k?-S.dir:(k==="name"?1:-1);S.sort=k;renderList()});
   $("#prev").onclick=()=>{if(S.page>0){S.page--;renderList()}};$("#next").onclick=()=>{S.page++;renderList()};render()
 }
-const inRegion=c=>S.region==="all"||(S.region==="fav"?FAV.includes(c.sgg):false)||S.region!=="fav"&&(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg));
+const inRegion=c=>(S.region==="all"||(S.region==="11"?c.sgg.startsWith("11"):/^(41|28)/.test(c.sgg)))&&(!S.favOnly||FAV.includes(c.sgg));
 // ---------- 마켓 탐색 기간 (7~365일) ----------
 const PDS=[7,30,60,90,180,365];
 function applyPd(){const ds=(window.PMETA&&window.PMETA.days)||PDS,i=ds.indexOf(S.pd);ALL.forEach(c=>{const x=c.p&&i>=0?c.p[i]:null;if(x){c.pp=x[0];c.pc=x[1];c.pn=x[2]}else{c.pp=null;c.pc=c.change;c.pn=null}})}
@@ -59,7 +61,8 @@ const top=reps.filter(c=>c.pc!=null).sort((a,b)=>b.pc-a.pc).slice(0,3);
 $("#movers").innerHTML=top.map((c,idx)=>`<div class="mv" data-id="${c.id}"><div class="mv-top"><div class="g">${SGG[c.sgg]} · ${c.dong}</div><span class="mv-rank">TOP ${idx+1}</span></div><div class="n">${c.name}</div><div class="s"><span>${band(c.band)} · <b>${eok(c.pp??c.price)}</b></span>${pill(c.pc)}</div></div>`).join("")||'<p class="muted">조건을 만족하는 단지가 없어요.</p>';
 document.querySelectorAll(".mv").forEach(d=>d.onclick=()=>select(d.dataset.id));
 if(!S.sel||!r.find(c=>c.id===S.sel))S.sel=(top[0]||r[0]||{}).id;renderList();renderDetail()}
-function filtered(){const q=S.q.toLowerCase();let r=ALL.filter(c=>inRegion(c)&&(!S.sgg||c.sgg===S.sgg)&&(!S.rep||c.rep)&&(!q||(c.name+c.dong+SGG[c.sgg]).toLowerCase().includes(q)));
+const qMatch=(c,q)=>{const hay=[c.name,c.dong,SGG[c.sgg],gu(c.sgg),sido(c.sgg)].join(" ").toLowerCase(),flat=hay.replace(/\s+/g,"");return q.split(/\s+/).filter(Boolean).every(t=>hay.includes(t)||flat.includes(t))};
+function filtered(){const q=S.q.toLowerCase();let r=ALL.filter(c=>inRegion(c)&&(!S.sgg||c.sgg===S.sgg)&&(!S.rep||c.rep)&&(!q||qMatch(c,q)));
 const k=S.sort,d=S.dir;return r.sort((a,b)=>{if(k==="pc"){if((a.pc==null)!==(b.pc==null))return a.pc==null?1:-1;if(a.rep!==b.rep)return a.rep?-1:1;return((a.pc||0)-(b.pc||0))*d}if(k==="pp"){const x=a.pp??a.price,y=b.pp??b.price;return(x-y)*d}if(k==="name")return(gu(a.sgg)+a.name).localeCompare(gu(b.sgg)+b.name,"ko")*d;if(a[k]==null||b[k]==null)return(a[k]==null)-(b[k]==null);return(a[k]-b[k])*d})}
 function renderList(){const r=filtered(),pages=Math.max(1,Math.ceil(r.length/20));S.page=Math.min(S.page,pages-1);const p=r.slice(S.page*20,S.page*20+20);
 $("#cnt").textContent=r.length.toLocaleString();
@@ -701,9 +704,11 @@ function initBottomNav(){
     btn.onclick=()=>{
       const k=btn.dataset.nav;
       nav.querySelectorAll(".bnav-btn").forEach(x=>x.classList.toggle("on",x===btn));
+      if(k!=="community")setView("market");
       if(k==="top")window.scrollTo({top:0,behavior:"smooth"});
       else if(k==="list"){const el=$("#list-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}
       else if(k==="lounge"){const el=$("#lounge-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}
+      else if(k==="community"){setView("community");document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"))}
       else if(k==="fav")openFav();
       else if(k==="pro")openReportModal("report");
     };
@@ -719,9 +724,9 @@ function fillSgg(){const el=$("#sgg"),v=el.value,ks=haveSgg();el.innerHTML='<opt
 SIDO.map(([n,p])=>{const g=ks.filter(k=>k.startsWith(p)).sort((a,b)=>gu(a).localeCompare(gu(b),"ko"));return g.length?`<optgroup label="${n}">${g.map(k=>`<option value="${k}">${FAV.includes(k)?"★ ":""}${gu(k)}</option>`).join("")}</optgroup>`:""}).join("");el.value=v}
 function toast(m){let t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
 function toggleFav(k){const i=FAV.indexOf(k);if(i>=0)FAV.splice(i,1);else{if(FAV.length>=5){toast("관심지역은 5곳까지 담을 수 있어요. 하나를 빼고 다시 골라주세요.");return}FAV.push(k)}
-saveFav();renderFavBar();renderFavPick();fillSgg();if(S.region==="fav"){S.page=0;render()}}
+saveFav();renderFavBar();renderFavPick();fillSgg();if(S.favOnly){S.page=0;render()}}
 function renderFavBar(){$("#favn").textContent=FAV.length+"/5";const t=document.querySelector('#tabs a[data-r="fav"]');if(t)t.textContent="★ 관심지역"+(FAV.length?" "+FAV.length:"");
-$("#favbar").innerHTML=FAV.length?FAV.map(k=>`<span class="fchip on" data-k="${k}">★ ${SGG[k]}<b>×</b></span>`).join(""):'<span class="muted sm">★ 관심지역을 담으면 위쪽 \'관심지역\' 탭에서 그 지역만 모아 볼 수 있어요.</span>';
+$("#favbar").innerHTML=FAV.length?FAV.map(k=>`<span class="fchip on" data-k="${k}">★ ${SGG[k]}<b>×</b></span>`).join(""):'<span class="muted sm">★ 관심지역을 담으면 마켓 탐색의 \'★ 관심지역만\'으로 그 지역만 모아 볼 수 있어요. 위 \'★ 관심지역 설정\'에서 담아 보세요.</span>';
 document.querySelectorAll("#favbar .fchip").forEach(e=>e.onclick=()=>toggleFav(e.dataset.k))}
 function renderFavPick(){const q=($("#favq").value||"").trim(),ks=haveSgg().filter(k=>!q||SGG[k].includes(q));
 $("#favsel").textContent=`선택 ${FAV.length}/5`;
@@ -1464,3 +1469,13 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-toast]");i
   addEventListener("resize",()=>{if(pop&&!pop.hidden&&last)place(last)});
   window.openJeonseInfo=open;
 })();
+
+// ---------- 커뮤니티 상단 페이지 뷰 ----------
+function setView(v){const on=v==="community";document.body.classList.toggle("view-community",on);
+  if(on){const b=$("#community-board"),s=$("#cp-slot");if(b&&s&&b.parentNode!==s)s.appendChild(b);window.scrollTo({top:0,behavior:"smooth"})}
+  else{const b=$("#community-board"),l=$("#cp-link");if(b&&l&&b.previousElementSibling!==l)l.after(b)}
+  document.querySelectorAll("#bnav .bnav-btn").forEach(x=>{if(on)x.classList.toggle("on",x.dataset.nav==="community");else if(x.dataset.nav==="community")x.classList.remove("on")});
+  try{history.replaceState(null,"",on?"#community":location.pathname+location.search)}catch(e){}}
+function goMarket(){const t=document.querySelector('#tabs a[data-r="'+S.region+'"]')||document.querySelector('#tabs a[data-r="all"]');document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x===t));setView("market");window.scrollTo({top:0})}
+function initCommunityView(){const bk=$("#cp-back");if(bk)bk.onclick=goMarket;const l=$("#cp-link");if(l)l.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setView("community")};
+  if(location.hash==="#community")setTimeout(()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setView("community")},0)}

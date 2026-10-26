@@ -3981,3 +3981,13 @@ b.up,i.up,.st-big.up{color:#e5484d}b.down,i.down,.st-big.down{color:#2f6fed}
 .st-lagln{stroke:#999;stroke-dasharray:3 3}.st-t{font-size:9px;fill:#999}.st-leg{font-size:11px;color:var(--muted,#888);text-align:center}
 .st-foot{grid-column:1/-1;font-size:11px;color:var(--muted,#888);margin:0}
 @media(max-width:760px){.story-card{grid-template-columns:1fr 1fr}.st-big{font-size:22px}.pair-line{font-size:12px}.link-strip{font-size:13px}}
+
+/* 커뮤니티 상단 페이지 뷰 */
+.community-page{display:none}
+body.view-community .community-page{display:block}
+body.view-community main>*:not(.community-page){display:none!important}
+.community-page .ch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cp-back{margin-left:auto;border:1px solid var(--line,#ddd);background:transparent;color:inherit;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.cp-link{display:block;width:100%;margin-top:12px;padding:12px;border:1px dashed var(--line,#ccc);border-radius:12px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+.community-page .cp-link{display:none}
+.filters #q{flex:1 1 100%;min-width:0}

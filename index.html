@@ -2,7 +2,7 @@
 <title>집썰 — 집에 관한 모든 썰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026112000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=20261026113500"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" id="meta-theme" content="#3182F6">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -14,9 +14,10 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </head><body>
 <header class="top"><div class="wrap hd"><div class="logo" title="집에 관한 정보·경험·의견이 모이는 곳"><span class="ic" aria-hidden="true"><img class="lm lm-l" src="icons/logo-mark.png" alt=""><img class="lm lm-d" src="icons/logo-mark-white.png" alt=""></span><span class="logo-txt">집썰</span><span class="logo-sub">집에 관한 모든 썰</span></div>
-<nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a><a data-r="fav">★ 관심지역</a></nav>
+<nav id="tabs"><a data-r="all" class="on">전체 마켓</a><a data-r="11">서울</a><a data-r="ext">경기 / 인천</a><a data-view="community" id="tab-community">💬 커뮤니티</a></nav>
 <div class="upd"><span id="badge" class="badge hide">샘플 데이터</span><span id="updated" class="upd-date"></span><button id="theme-toggle" class="theme-btn" type="button" aria-label="테마 전환">🌙 다크</button></div></div></header>
 <main class="wrap">
+<section class="card community-page" id="community-page" aria-label="커뮤니티"><div class="ch"><h3>💬 커뮤니티 게시판</h3><span class="tag">의견 · 해석</span><button type="button" class="cp-back" id="cp-back">← 마켓으로</button></div><p class="muted sm">내집마련·갈아타기 이야기를 나눠요. 글은 의견이며 국토부 실거래 관측과 구분돼요.</p><div id="cp-slot"></div></section>
 <div class="live-ticker" id="live-ticker" role="region" aria-label="커뮤니티 라운지 티커">
   <span class="pair-line" id="pair-line"></span><span class="lt-badge">💬 라운지</span>
   <button type="button" class="lt-item" id="lt-item"></button>
@@ -29,7 +30,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </div>
 <section class="hero"><div class="eyebrow"><span class="edot"></span>SEOUL · GYEONGGI · INCHEON · 실거래 트래커</div><h1>서울이 움직일 때, 내 관심 단지는 어디까지 왔을까?</h1><p>국토부 실거래로 서울·경기·인천을 비교하고, 관심 지역만 모아 보세요.</p></section>
 <section class="card story-card" id="story-card" aria-label="서울·경기 관측"></section>
-<section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="아파트 검색 · 단지명, 동, 지역 (서울·경기·인천)" aria-label="아파트 검색" role="combobox" aria-expanded="false" aria-controls="gres"><span class="gskbd">/ 검색</span><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
+<section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="지역명 또는 아파트명 검색" aria-label="지역명 또는 아파트명 검색" role="combobox" aria-expanded="false" aria-controls="gres"><span class="gskbd">/ 검색</span><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
 <section class="card kpis"><div class="kpi-card"><div class="kpi-top"><h4>조회 단지</h4><span class="kpi-ic">🏢</span></div><div class="kpi-val"><b id="k-total">-</b><small>개</small></div><p>단지·면적대 기준</p></div>
 <div class="kpi-card up-card"><div class="kpi-top"><h4>상승 단지</h4><span class="kpi-ic up">▲</span></div><div class="kpi-val"><b id="k-up" class="up">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
 <div class="kpi-card down-card"><div class="kpi-top"><h4>하락 단지</h4><span class="kpi-ic down">▼</span></div><div class="kpi-val"><b id="k-down" class="down">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
@@ -52,14 +53,15 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
     <div class="lounge-chat" id="lounge-chat"></div>
   </div>
   <aside class="ad-slot ad-slot-b" aria-label="파트너 광고"><span class="ad-badge">파트너</span><div class="adb-body"><h4>예산·DSR 먼저 점검하고 단지 고르기</h4><p>임장·매물 상담 파트너를 준비 중이에요. 곧 연결됩니다.</p><p class="ad-micro">이 영역은 광고입니다. 위 수치는 국토부 실거래 관측과 무관합니다.</p></div><button type="button" class="adb-cta" data-toast="파트너 연결 준비 중">곧 연결</button></aside>
+  <button type="button" class="cp-link" id="cp-link">💬 커뮤니티 게시판 전체 보기 →</button>
   <div class="cboard-wrap" id="community-board" aria-label="내집마련·갈아타기 커뮤니티 게시판"></div>
 </section>
 <section class="card" id="movers-sec"><div class="ch"><h3>주목해 볼 단지</h3><span class="tag" id="mvtag">상승률 상위 · 거래 활발 단지</span></div><div id="movers" class="movers"></div>
 <p class="muted sm">거래 20건 이상이고 최근 6개월 중 4개월 이상 거래된 단지 중, 마켓 탐색에서 고른 기간의 양쪽 구간에 거래가 충분한(7·30일 2건, 그 외 3건 이상) 단지만 순위에 포함해요.</p></section>
 <section class="main">
 <div class="card list" id="list-sec"><div class="ch"><h3>마켓 탐색 <span id="cnt" class="muted"></span></h3></div>
-<div class="filters"><input id="q" placeholder="목록 안에서 거르기" aria-label="목록 필터"><select id="sgg"><option value="">모든 시·구</option></select>
-<label><input type="checkbox" id="rep"> 대표 단지만</label><button id="favbtn" class="favbtn">★ 관심지역 설정 <span id="favn">0/5</span></button></div>
+<div class="filters"><input id="q" type="search" placeholder="지역명·아파트명 검색 (예: 마포, 분당, 래미안)" aria-label="지역명·아파트명 검색"><select id="sgg"><option value="">모든 시·구</option></select>
+<label><input type="checkbox" id="rep"> 대표 단지만</label><label><input type="checkbox" id="favonly"> ★ 관심지역만</label><button id="favbtn" class="favbtn">★ 관심지역 설정 <span id="favn">0/5</span></button></div>
 <div id="favbar" class="favbar"></div>
 <div class="pdw"><div id="pdb" class="pdb" role="group" aria-label="기간"></div><p id="pdcap" class="muted pdcap"></p></div>
 <div class="tblw"><table class="tbl"><thead><tr><th data-s="name">지역 / 단지 · 평수</th><th data-s="pp" class="r">가격 · 억</th><th data-s="pc" class="r">등락률</th><th data-s="jeonse_ratio" class="r">전세가율</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -73,8 +75,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
   <button type="button" data-nav="top" class="bnav-btn on"><span class="bi">🏠</span><span>홈·시황</span></button>
   <button type="button" data-nav="list" class="bnav-btn"><span class="bi">🔍</span><span>단지탐색</span></button>
   <button type="button" data-nav="lounge" class="bnav-btn"><span class="bi">💬</span><span>라운지</span></button>
-  <button type="button" data-nav="fav" class="bnav-btn"><span class="bi">⭐</span><span>관심지역</span></button>
+  <button type="button" data-nav="community" class="bnav-btn"><span class="bi">📝</span><span>커뮤니티</span></button>
 </nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>집썰</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가 · <a href="#" class="foot-partner" data-toast="파트너 문의 채널 준비 중">광고·파트너 문의</a></span></footer>
-<script src="app.js?v=20261026112000"></script></body></html>
+<script src="app.js?v=20261026113500"></script></body></html>
