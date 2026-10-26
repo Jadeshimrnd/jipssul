@@ -4016,3 +4016,4 @@ body.view-community main>*:not(.community-page){display:none!important}
 [data-theme=dark] .gm-tabs{background:#23272f}[data-theme=dark] .gm-tabs button.on{background:#374151;color:#f9fafb}
 .gm-tt-lbl{font-size:10.5px;padding:0;white-space:nowrap}
 @media(max-width:720px){.ggmap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.gm-tt-lbl.gm-nopct .gm-p{display:none}.gm-tt-lbl.gm-hide{visibility:hidden}

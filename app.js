@@ -1500,16 +1500,27 @@ function gmDraw(){if(!GM.map||!GM.geo)return;const a=gmAgg();if(GM.lay)GM.lay.re
   const fc=GM.city?{type:"FeatureCollection",features:GM.geo.gu.features.filter(f=>f.properties.city===GM.city)}:gmL1();
   const st=f=>{const r=a[f.properties.c];return{color:isDark()?"#11151c":"#ffffff",weight:1,fillOpacity:.72,fillColor:gmColor(r&&r.n>=GM_MIN?r.v:null)}};
   GM.lay=L.geoJSON(fc,{style:st,onEachFeature:(f,l)=>{const r=a[f.properties.c];
-    l.bindTooltip(`${esc(f.properties.n)} ${r&&r.n>=GM_MIN?fmtPct(r.v):"—"}`,{permanent:true,direction:"center",className:"gm-tt-lbl"});
+    const ok=r&&r.n>=GM_MIN;l._gmPri=ok?1e3+Math.abs(r.v)*10+Math.log1p(r.n):(r?r.n:0);l._gmOk=ok;
+    l.bindTooltip(`<span class="gm-n">${esc(f.properties.n)}</span><span class="gm-p"> ${ok?fmtPct(r.v):"—"}</span>`,{permanent:true,direction:"center",className:"gm-tt-lbl"});
     l.on({mouseover:()=>{l.setStyle({weight:3.5,color:isDark()?"#f1f2f4":"#111827"});l.bringToFront();gmInfo(f.properties,a)},
       mouseout:()=>GM.lay.resetStyle(l),
       click:()=>{gmInfo(f.properties,a);if(!GM.city&&f.properties.gu)gmGo(f.properties.c)}})}}).addTo(GM.map);
-  gmBC()}
+  gmBC();requestAnimationFrame(gmLabels)}
+/* 라벨 충돌 처리: 우선순위(|등락|·단지 수) 순으로 배치, 줌 낮으면 상위만 % 병기, 겹치면 이름만→숨김 */
+function gmLabels(){if(!GM.lay||!GM.map)return;const z=GM.map.getZoom(),full=GM.city||z>=(GM.tab==="se"?11.5:10.5);
+  const ls=[];GM.lay.eachLayer(l=>{const t=l.getTooltip&&l.getTooltip(),el=t&&t.getElement&&t.getElement();if(el)ls.push([l,el])});
+  ls.sort((a,b)=>b[0]._gmPri-a[0]._gmPri);const topN=full?1e9:Math.max(4,Math.round(ls.length*.3));
+  ls.forEach(([,el])=>{el.classList.remove("gm-hide","gm-nopct")});
+  const placed=[],hit=r=>placed.some(q=>r.left<q.right+2&&r.right>q.left-2&&r.top<q.bottom+1&&r.bottom>q.top-1);
+  const rc=(l,el)=>{l.getTooltip().update();return el.getBoundingClientRect()};
+  ls.forEach(([l,el],i)=>{if(!l._gmOk||i>=topN)el.classList.add("gm-nopct");let r=rc(l,el);
+    if(hit(r)&&!el.classList.contains("gm-nopct")){el.classList.add("gm-nopct");r=rc(l,el)}
+    if(hit(r)){el.classList.add("gm-hide");return}placed.push(r)})}
 function gmGo(c){GM.city=c;gmDraw();if(GM.tl)GM.tl.setOpacity(c?.35:1);GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});if(!c)$("#gm-info").textContent=GM.tab==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
 function gmTab(t){GM.tab=t;gmTabs();GM.city=null;gmDraw();GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});$("#gm-info").textContent=t==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
 async function initGGMap(){if(GM.map||!window.L||!$("#gm-map"))return;gmRenderPd();
-  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026121500`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
-  const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:7,maxZoom:13,scrollWheelZoom:true,wheelPxPerZoomLevel:90,attributionControl:true});
+  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026123000`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
+  const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:7,maxZoom:13,scrollWheelZoom:true,wheelPxPerZoomLevel:120,attributionControl:true});m.on("zoomend",()=>requestAnimationFrame(gmLabels));
   GM.tl=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
   const world=[[90,-180],[90,180],[-90,180],[-90,-180]],holes=[];const g=GM.geo.outline;
   (g.type==="Polygon"?[g.coordinates]:g.coordinates).forEach(p=>p.forEach(r=>holes.push(r.map(([x,y])=>[y,x]))));
