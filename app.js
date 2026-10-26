@@ -35,7 +35,7 @@ async function init(){
   initReportModal();
   initBottomNav();
   let sum,cx;try{[sum,cx]=await get("web_data")}catch(e){[sum,cx]=await get("sample_data");$("#badge").classList.remove("hide")}
-  window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;computeLink();applyPd();renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
+  window.UPDATED=sum.updated;window.SENTI=sum.sentiment||null;window.RENT=sum.rent||null;if(sum.regions)SGG={...SGG,...sum.regions};const arr=Array.isArray(cx)?cx:cx.rows.map(r=>Object.fromEntries(cx.cols.map((k,i)=>[k,r[i]])));ALL=arr.map(c=>({...c,id:c.id||c.f,rep:c.rep!=null?c.rep:isRep(c)}));window.PMETA=sum.periods||null;computeLink();applyPd();try{initGGMap()}catch(e){console.warn(e)}renderPd();FAV=FAV.filter(k=>SGG[k]);saveFav();$("#updated").textContent="업데이트 "+sum.updated;
   fillSgg();renderFavBar();$("#favbtn").onclick=()=>openFav();$("#favclose").onclick=closeFav;$("#favdim").onclick=closeFav;$("#favq").oninput=renderFavPick;
   document.querySelectorAll("#tabs a").forEach(a=>a.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.remove("on"));a.classList.add("on");if(a.dataset.view==="community"){setView("community");return}setView("market");S.region=a.dataset.r;S.page=0;S.sel=null;render()});
   {const fo=$("#favonly");if(fo)fo.onchange=e=>{S.favOnly=e.target.checked;S.page=0;if(S.favOnly&&!FAV.length)openFav();renderList()}}
@@ -483,11 +483,6 @@ function renderLink(){
     <span class="ls-lag">시차 힌트 · 약 ${LINK_LAG_MONTHS}개월</span>`;
   const pl=$("#pair-line");
   if(pl){const a=LINK.pw[p.s],b=LINK.pw[p.g];pl.innerHTML=`<b>★ 내 페어 · 지난주 대비</b> ${sName} <i class="${pcls(a)}">${fmtPct(a)}</i> → ${gName} <i class="${pcls(b)}">${fmtPct(b)}</i>`;pl.onclick=()=>{const l=$("#lounge-sec");if(l)l.scrollIntoView({behavior:"smooth"})}}
-  const sc=$("#story-card");
-  if(sc){const gv=LINK.pw[p.g]!=null&&p.on?null:null;
-    sc.innerHTML=`<div class="st-col"><div class="st-h">서울 관측 <span class="lbl-ob">관측</span></div><div class="st-big ${pcls(LINK.seoul)}">${fmtPct(LINK.seoul)}</div><p class="st-sub">최근 90일 중간값 등락${LINK.ns?` · ${LINK.ns.toLocaleString()}개 단지`:""}</p></div>
-    <div class="st-col"><div class="st-h">내 관심지역 후행</div><p class="st-sub">${esc(gName)}${p.on?" · 내 페어":""}</p><div class="st-big ${pcls(LINK.gg)}">${fmtPct(LINK.gg)}</div><p class="st-sub">경기 90일 중간값 · 서울 대비 시차 약 ${LINK_LAG_MONTHS}개월 · 관측</p></div>
-    <p class="st-foot">국토부 실거래 관측 · 투자 추천 아님</p>`}
 }
 function pairPollHTML(){
   const p=getPair();let pv=null;try{pv=localStorage.getItem("jipssul_link_poll_"+weekKey())}catch(e){}
@@ -1479,3 +1474,40 @@ function setView(v){const on=v==="community";document.body.classList.toggle("vie
 function goMarket(){const t=document.querySelector('#tabs a[data-r="'+S.region+'"]')||document.querySelector('#tabs a[data-r="all"]');document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x===t));setView("market");window.scrollTo({top:0})}
 function initCommunityView(){const bk=$("#cp-back");if(bk)bk.onclick=goMarket;const l=$("#cp-link");if(l)l.onclick=()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setView("community")};
   if(location.hash==="#community")setTimeout(()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setView("community")},0)}
+
+/* ===== 경기 드릴다운 지도 (Leaflet+OSM, 관측) ===== */
+const GM={pd:90,city:null,map:null,geo:null,lay:null,mask:null,ol:null};
+const GM_PDS=[7,30,90,180,365];
+function gmAgg(){const ds=(window.PMETA&&window.PMETA.days)||PDS,i=ds.indexOf(GM.pd),m={};
+  ALL.forEach(c=>{if(!c.sgg||c.sgg.slice(0,2)!=="41"||!c.p||!c.p[i])return;const v=c.p[i][1];if(v==null||!isFinite(v))return;(m[c.sgg]=m[c.sgg]||[]).push(v)});
+  const out={},city={};Object.entries(m).forEach(([k,a])=>{out[k]={v:med(a),n:a.length};const ck=k.slice(0,4)+"0";(city[ck]=city[ck]||[]).push(...a)});
+  Object.entries(city).forEach(([k,a])=>{out[k]={v:med(a),n:a.length}});return out}
+const GM_MIN=3;
+function gmColor(v){if(v==null)return "#c4c8cf";const t=Math.max(-1,Math.min(1,v>=0?v/5:v/3));
+  if(t>=0){const a=[255,245,240],b=[214,40,40];return `rgb(${a.map((x,j)=>Math.round(x+(b[j]-x)*t)).join(",")})`}
+  const a=[240,245,255],b=[37,99,235];return `rgb(${a.map((x,j)=>Math.round(x+(b[j]-x)*-t)).join(",")})`}
+function gmRenderPd(){$("#gm-pd").innerHTML=GM_PDS.map(d=>`<button type="button" class="chip${d===GM.pd?" on":""}" data-d="${d}">${d===365?"1년":d+"일"}</button>`).join("");
+  $("#gm-pd").querySelectorAll("button").forEach(b=>b.onclick=()=>{GM.pd=+b.dataset.d;gmRenderPd();gmDraw()})}
+function gmBC(){const el=$("#gm-bc");if(!GM.city){el.innerHTML='<b>경기도</b> · 시·군';return}
+  const f=GM.geo.city.features.find(x=>x.properties.c===GM.city);el.innerHTML=`<a href="#" id="gm-up">← 경기도</a> › <b>${esc(f.properties.n)}</b>`;$("#gm-up").onclick=e=>{e.preventDefault();gmGo(null)}}
+function gmInfo(p,a){const r=a[p.c],nm=(GM.city&&p.cn?p.cn+" ":"")+p.n;const per=GM.pd===365?"1년":GM.pd+"일";
+  $("#gm-info").innerHTML=!r||r.n<GM_MIN?`<b>${esc(nm)}</b> · ${per} <span class="muted">거래 적음${r?` (${r.n}개 단지)`:""}</span>`:`<b>${esc(nm)}</b> · ${per} <b class="${pcls(r.v)}">${fmtPct(r.v)}</b> <span class="muted">· ${r.n}개 단지 중간값</span> <span class="lbl-ob">관측</span>`}
+function gmDraw(){if(!GM.map||!GM.geo)return;const a=gmAgg();if(GM.lay)GM.lay.remove();
+  const fc=GM.city?{type:"FeatureCollection",features:GM.geo.gu.features.filter(f=>f.properties.city===GM.city)}:GM.geo.city;
+  const st=f=>{const r=a[f.properties.c];return{color:isDark()?"#11151c":"#ffffff",weight:1,fillOpacity:.72,fillColor:gmColor(r&&r.n>=GM_MIN?r.v:null)}};
+  GM.lay=L.geoJSON(fc,{style:st,onEachFeature:(f,l)=>{const r=a[f.properties.c];
+    l.bindTooltip(`${esc(f.properties.n)} ${r&&r.n>=GM_MIN?fmtPct(r.v):"—"}`,{permanent:!!GM.city,direction:"center",className:"gm-tt-lbl"});
+    l.on({mouseover:()=>{l.setStyle({weight:3.5,color:isDark()?"#f1f2f4":"#111827"});l.bringToFront();gmInfo(f.properties,a)},
+      mouseout:()=>GM.lay.resetStyle(l),
+      click:()=>{gmInfo(f.properties,a);if(!GM.city&&f.properties.gu)gmGo(f.properties.c);else if(!GM.city)GM.map.fitBounds(l.getBounds(),{padding:[20,20]})}})}}).addTo(GM.map);
+  gmBC()}
+function gmGo(c){GM.city=c;gmDraw();GM.map.fitBounds((c?GM.lay:GM.ol).getBounds(),{padding:[16,16]});if(!c)$("#gm-info").textContent="시·군을 눌러 구 단위로 들어가 보세요."}
+async function initGGMap(){if(GM.map||!window.L||!$("#gm-map"))return;gmRenderPd();
+  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026120000`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
+  const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:8,maxZoom:13,scrollWheelZoom:false,attributionControl:true});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
+  const world=[[90,-180],[90,180],[-90,180],[-90,-180]],holes=[];const g=GM.geo.outline;
+  (g.type==="Polygon"?[g.coordinates]:g.coordinates).forEach(p=>p.forEach(r=>holes.push(r.map(([x,y])=>[y,x]))));
+  GM.mask=L.polygon([world,...holes],{stroke:false,fillOpacity:1,fillColor:"var(--bg)",className:"gm-mask",interactive:false}).addTo(m);
+  GM.ol=L.geoJSON(g,{style:{fill:false,weight:1.5,color:"#6b7280"},interactive:false}).addTo(m);
+  m.setMaxBounds(GM.ol.getBounds().pad(.3));gmGo(null)}

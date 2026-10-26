@@ -2,7 +2,8 @@
 <title>집썰 — 집에 관한 모든 썰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026113500"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin>
+<link rel="stylesheet" href="style.css?v=20261026120000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" id="meta-theme" content="#3182F6">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -29,8 +30,8 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
   </div>
 </div>
 <section class="hero"><div class="eyebrow"><span class="edot"></span>SEOUL · GYEONGGI · INCHEON · 실거래 트래커</div><h1>서울이 움직일 때, 내 관심 단지는 어디까지 왔을까?</h1><p>국토부 실거래로 서울·경기·인천을 비교하고, 관심 지역만 모아 보세요.</p></section>
-<section class="card story-card" id="story-card" aria-label="서울·경기 관측"></section>
 <section class="gs" id="gs"><div class="gsbox"><span class="gsi">⌕</span><input id="gq" type="search" autocomplete="off" placeholder="지역명 또는 아파트명 검색" aria-label="지역명 또는 아파트명 검색" role="combobox" aria-expanded="false" aria-controls="gres"><span class="gskbd">/ 검색</span><button id="gx" class="gx hide" aria-label="지우기">✕</button></div><div id="gres" class="gres" role="listbox"></div></section>
+<section class="card ggmap" id="ggmap" aria-label="경기 지역별 등락 지도"><div class="gm-head"><div class="gm-tt"><h3>경기 지역별 등락</h3><nav class="gm-bc" id="gm-bc"></nav></div><div class="gm-pd" id="gm-pd" role="tablist"></div></div><div class="gm-wrap"><div id="gm-map" class="gm-map"></div><div class="gm-info" id="gm-info">시·군을 눌러 구 단위로 들어가 보세요.</div></div><div class="gm-foot"><div class="gm-leg"><span>하락</span><i class="gm-bar"></i><span>상승</span><span class="gm-na"><i></i>거래 적음</span></div><p class="gm-note"><span class="lbl-ob">관측</span> 호버: 테두리 · 클릭: 단계 진입 · 단지별 기간 등락의 중간값 · 국토부 실거래 관측 · 투자 추천 아님</p></div></section>
 <section class="card kpis"><div class="kpi-card"><div class="kpi-top"><h4>조회 단지</h4><span class="kpi-ic">🏢</span></div><div class="kpi-val"><b id="k-total">-</b><small>개</small></div><p>단지·면적대 기준</p></div>
 <div class="kpi-card up-card"><div class="kpi-top"><h4>상승 단지</h4><span class="kpi-ic up">▲</span></div><div class="kpi-val"><b id="k-up" class="up">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
 <div class="kpi-card down-card"><div class="kpi-top"><h4>하락 단지</h4><span class="kpi-ic down">▼</span></div><div class="kpi-val"><b id="k-down" class="down">-</b><small>개</small></div><p>최근 3개월 vs 직전 3개월</p></div>
@@ -79,4 +80,5 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>집썰</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가 · <a href="#" class="foot-partner" data-toast="파트너 문의 채널 준비 중">광고·파트너 문의</a></span></footer>
-<script src="app.js?v=20261026113500"></script></body></html>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+<script src="app.js?v=20261026120000"></script></body></html>
