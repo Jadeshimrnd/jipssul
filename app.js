@@ -1507,7 +1507,7 @@ function gmDraw(){if(!GM.map||!GM.geo)return;const a=gmAgg();if(GM.lay)GM.lay.re
       click:()=>{gmInfo(f.properties,a);if(!GM.city&&f.properties.gu)gmGo(f.properties.c)}})}}).addTo(GM.map);
   gmBC();requestAnimationFrame(gmLabels)}
 /* 라벨 충돌 처리: 우선순위(|등락|·단지 수) 순으로 배치, 줌 낮으면 상위만 % 병기, 겹치면 이름만→숨김 */
-function gmLabels(){if(!GM.lay||!GM.map)return;const z=GM.map.getZoom(),full=GM.city||z>=(GM.tab==="se"?11.5:10.5);
+function gmLabels(){if(!GM.lay||!GM.map)return;const z=GM.map.getZoom(),full=GM.city||z>=(GM.tab==="se"?11:9.5);
   const ls=[];GM.lay.eachLayer(l=>{const t=l.getTooltip&&l.getTooltip(),el=t&&t.getElement&&t.getElement();if(el)ls.push([l,el])});
   ls.sort((a,b)=>b[0]._gmPri-a[0]._gmPri);const topN=full?1e9:Math.max(4,Math.round(ls.length*.3));
   ls.forEach(([,el])=>{el.classList.remove("gm-hide","gm-nopct")});
