@@ -2,13 +2,14 @@
 <title>집썰 — 집에 관한 모든 썰</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026110000"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css?v=20261026111500"><link rel="icon" href="icons/favicon-32.png"><link rel="manifest" href="manifest.json">
+<meta name="color-scheme" content="light dark">
 <meta name="theme-color" id="meta-theme" content="#3182F6">
 <link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="집썰">
 <script>
-(function(){try{var t=localStorage.getItem("jade_theme");if(t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)){if(t==="dark"){document.documentElement.dataset.theme="dark";var m=document.getElementById("meta-theme");if(m)m.content="#0B0F19"}}}catch(e){}})();
+(function(){try{var t=localStorage.getItem("jade_theme"),d=document.documentElement,m=document.getElementById("meta-theme");var dk=t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(dk){d.dataset.theme="dark";d.style.colorScheme="dark";if(m)m.content="#0B0F19"}else{d.removeAttribute("data-theme");d.style.colorScheme="light";if(m)m.content="#3182F6"}}catch(e){}})();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </script>
 </head><body>
@@ -76,4 +77,4 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
 </nav>
 <div id="toast" class="toast"></div>
 <footer class="wrap foot"><span><b>집썰</b> 개발자가 집 사는 그날까지</span><span>데이터 출처: 국토교통부 아파트 매매 실거래가 · <a href="#" class="foot-partner" data-toast="파트너 문의 채널 준비 중">광고·파트너 문의</a></span></footer>
-<script src="app.js?v=20261026110000"></script></body></html>
+<script src="app.js?v=20261026111500"></script></body></html>
