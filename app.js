@@ -12,6 +12,7 @@ function syncThemeBtn(){
   const btn=$("#theme-toggle"),dk=isDark(),meta=$("#meta-theme");
   if(btn)btn.textContent=dk?"☀️ 라이트":"🌙 다크";
   if(meta)meta.content=dk?"#0B0F19":"#3182F6";
+  document.documentElement.style.colorScheme=dk?"dark":"light";
 }
 function toggleTheme(){
   const next=isDark()?"light":"dark";
