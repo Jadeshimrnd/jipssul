@@ -483,9 +483,6 @@ function renderLink(){
   const sc=$("#story-card");
   if(sc){const gv=LINK.pw[p.g]!=null&&p.on?null:null;
     sc.innerHTML=`<div class="st-col"><div class="st-h">서울 관측 <span class="lbl-ob">관측</span></div><div class="st-big ${pcls(LINK.seoul)}">${fmtPct(LINK.seoul)}</div><p class="st-sub">최근 90일 중간값 등락${LINK.ns?` · ${LINK.ns.toLocaleString()}개 단지`:""}</p></div>
-    <div class="st-mid"><div class="st-h">서울 → 경기 연동 스토리 <span class="st-lag">선행 약 ${LINK_LAG_MONTHS}개월 →</span></div>
-      <svg viewBox="0 0 220 70" class="st-svg" aria-hidden="true"><path d="M5 60 C60 55 70 20 120 15 S190 10 215 8" class="st-s"/><path d="M5 64 C70 62 100 50 140 35 S195 22 215 18" class="st-g"/><line x1="120" y1="15" x2="168" y2="27" class="st-lagln"/><text x="130" y="11" class="st-t">≈${LINK_LAG_MONTHS}개월</text></svg>
-      <div class="st-leg">── 서울 · - - 경기(${esc(gName)})</div></div>
     <div class="st-col"><div class="st-h">내 관심지역 후행</div><p class="st-sub">${esc(gName)}${p.on?" · 내 페어":""}</p><div class="st-big ${pcls(LINK.gg)}">${fmtPct(LINK.gg)}</div><p class="st-sub">경기 90일 중간값 · 서울 대비 시차 약 ${LINK_LAG_MONTHS}개월 · 관측</p></div>
     <p class="st-foot">국토부 실거래 관측 · 투자 추천 아님</p>`}
 }
