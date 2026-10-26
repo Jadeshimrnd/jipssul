@@ -1476,11 +1476,11 @@ function initCommunityView(){const bk=$("#cp-back");if(bk)bk.onclick=goMarket;co
   if(location.hash==="#community")setTimeout(()=>{document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setView("community")},0)}
 
 /* ===== 경기 드릴다운 지도 (Leaflet+OSM, 관측) ===== */
-const GM={pd:90,city:null,map:null,geo:null,lay:null,mask:null,ol:null};
+const GM={pd:90,tab:"gi",city:null,map:null,geo:null,lay:null,mask:null,ol:null};
 const GM_PDS=[7,30,90,180,365];
 function gmAgg(){const ds=(window.PMETA&&window.PMETA.days)||PDS,i=ds.indexOf(GM.pd),m={};
-  ALL.forEach(c=>{if(!c.sgg||c.sgg.slice(0,2)!=="41"||!c.p||!c.p[i])return;const v=c.p[i][1];if(v==null||!isFinite(v))return;(m[c.sgg]=m[c.sgg]||[]).push(v)});
-  const out={},city={};Object.entries(m).forEach(([k,a])=>{out[k]={v:med(a),n:a.length};const ck=k.slice(0,4)+"0";(city[ck]=city[ck]||[]).push(...a)});
+  ALL.forEach(c=>{if(!c.sgg||!/^(11|28|41)/.test(c.sgg)||!c.p||!c.p[i])return;const v=c.p[i][1];if(v==null||!isFinite(v))return;(m[c.sgg]=m[c.sgg]||[]).push(v)});
+  const out={},city={};Object.entries(m).forEach(([k,a])=>{out[k]={v:med(a),n:a.length};if(k.slice(0,2)!=="41")return;const ck=k.slice(0,4)+"0";(city[ck]=city[ck]||[]).push(...a)});
   Object.entries(city).forEach(([k,a])=>{out[k]={v:med(a),n:a.length}});return out}
 const GM_MIN=3;
 function gmColor(v){if(v==null)return "#c4c8cf";const t=Math.max(-1,Math.min(1,v>=0?v/5:v/3));
@@ -1488,26 +1488,31 @@ function gmColor(v){if(v==null)return "#c4c8cf";const t=Math.max(-1,Math.min(1,v
   const a=[240,245,255],b=[37,99,235];return `rgb(${a.map((x,j)=>Math.round(x+(b[j]-x)*-t)).join(",")})`}
 function gmRenderPd(){$("#gm-pd").innerHTML=GM_PDS.map(d=>`<button type="button" class="chip${d===GM.pd?" on":""}" data-d="${d}">${d===365?"1년":d+"일"}</button>`).join("");
   $("#gm-pd").querySelectorAll("button").forEach(b=>b.onclick=()=>{GM.pd=+b.dataset.d;gmRenderPd();gmDraw()})}
-function gmBC(){const el=$("#gm-bc");if(!GM.city){el.innerHTML='<b>경기도</b> · 시·군';return}
-  const f=GM.geo.city.features.find(x=>x.properties.c===GM.city);el.innerHTML=`<a href="#" id="gm-up">← 경기도</a> › <b>${esc(f.properties.n)}</b>`;$("#gm-up").onclick=e=>{e.preventDefault();gmGo(null)}}
+const GM_TABS={se:{t:"서울 지역별 등락",s:"서울 · 구",sd:["11"]},gi:{t:"경기·인천 지역별 등락",s:"경기·인천 · 시·군·구",sd:["41","28"]}};
+function gmTabs(){const T=GM_TABS[GM.tab];$("#gm-title").textContent=T.t;document.querySelectorAll("#gm-tabs button").forEach(b=>{const on=b.dataset.t===GM.tab;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)})}
+function gmL1(){return{type:"FeatureCollection",features:GM.geo.city.features.filter(f=>GM_TABS[GM.tab].sd.includes(f.properties.sd))}}
+function gmBC(){const el=$("#gm-bc");if(!GM.city){el.innerHTML=`<b>${GM_TABS[GM.tab].s}</b>`;return}
+  const f=GM.geo.city.features.find(x=>x.properties.c===GM.city);el.innerHTML=`<a href="#" id="gm-up">← ${GM.tab==="se"?"서울":"경기·인천"}</a> › <b>${esc(f.properties.n)}</b>`;$("#gm-up").onclick=e=>{e.preventDefault();gmGo(null)}}
 function gmInfo(p,a){const r=a[p.c],nm=(GM.city&&p.cn?p.cn+" ":"")+p.n;const per=GM.pd===365?"1년":GM.pd+"일";
   $("#gm-info").innerHTML=!r||r.n<GM_MIN?`<b>${esc(nm)}</b> · ${per} <span class="muted">거래 적음${r?` (${r.n}개 단지)`:""}</span>`:`<b>${esc(nm)}</b> · ${per} <b class="${pcls(r.v)}">${fmtPct(r.v)}</b> <span class="muted">· ${r.n}개 단지 중간값</span> <span class="lbl-ob">관측</span>`}
-function gmDraw(){if(!GM.map||!GM.geo)return;const a=gmAgg();if(GM.lay)GM.lay.remove();
-  const fc=GM.city?{type:"FeatureCollection",features:GM.geo.gu.features.filter(f=>f.properties.city===GM.city)}:GM.geo.city;
+function gmDraw(){if(!GM.map||!GM.geo)return;const a=gmAgg();if(GM.lay)GM.lay.remove();if(GM.dim)GM.dim.remove();GM.dim=null;
+  if(GM.city){GM.dim=L.geoJSON(gmL1(),{filter:f=>f.properties.c!==GM.city,style:{color:"#9ca3af",weight:.6,fillColor:"#9ca3af",fillOpacity:.08,opacity:.25},interactive:false}).addTo(GM.map)}
+  const fc=GM.city?{type:"FeatureCollection",features:GM.geo.gu.features.filter(f=>f.properties.city===GM.city)}:gmL1();
   const st=f=>{const r=a[f.properties.c];return{color:isDark()?"#11151c":"#ffffff",weight:1,fillOpacity:.72,fillColor:gmColor(r&&r.n>=GM_MIN?r.v:null)}};
   GM.lay=L.geoJSON(fc,{style:st,onEachFeature:(f,l)=>{const r=a[f.properties.c];
-    l.bindTooltip(`${esc(f.properties.n)} ${r&&r.n>=GM_MIN?fmtPct(r.v):"—"}`,{permanent:!!GM.city,direction:"center",className:"gm-tt-lbl"});
+    l.bindTooltip(`${esc(f.properties.n)} ${r&&r.n>=GM_MIN?fmtPct(r.v):"—"}`,{permanent:true,direction:"center",className:"gm-tt-lbl"});
     l.on({mouseover:()=>{l.setStyle({weight:3.5,color:isDark()?"#f1f2f4":"#111827"});l.bringToFront();gmInfo(f.properties,a)},
       mouseout:()=>GM.lay.resetStyle(l),
-      click:()=>{gmInfo(f.properties,a);if(!GM.city&&f.properties.gu)gmGo(f.properties.c);else if(!GM.city)GM.map.fitBounds(l.getBounds(),{padding:[20,20]})}})}}).addTo(GM.map);
+      click:()=>{gmInfo(f.properties,a);if(!GM.city&&f.properties.gu)gmGo(f.properties.c)}})}}).addTo(GM.map);
   gmBC()}
-function gmGo(c){GM.city=c;gmDraw();GM.map.fitBounds((c?GM.lay:GM.ol).getBounds(),{padding:[16,16]});if(!c)$("#gm-info").textContent="시·군을 눌러 구 단위로 들어가 보세요."}
+function gmGo(c){GM.city=c;gmDraw();if(GM.tl)GM.tl.setOpacity(c?.35:1);GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});if(!c)$("#gm-info").textContent=GM.tab==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
+function gmTab(t){GM.tab=t;gmTabs();GM.city=null;gmDraw();GM.map.fitBounds(GM.lay.getBounds(),{padding:[16,16],animate:false});$("#gm-info").textContent=t==="se"?"구에 마우스를 올리면 등락을 볼 수 있어요.":"시를 눌러 구 단위로 들어가 보세요."}
 async function initGGMap(){if(GM.map||!window.L||!$("#gm-map"))return;gmRenderPd();
-  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026120000`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
-  const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:8,maxZoom:13,scrollWheelZoom:false,attributionControl:true});
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
+  try{GM.geo=await fetch(`${window.DIR||"web_data"}/gg_map.json?v=20261026121500`).then(r=>r.json())}catch(e){$("#gm-info").textContent="지도 경계를 불러오지 못했어요.";return}
+  const m=GM.map=L.map("gm-map",{zoomSnap:.25,minZoom:7,maxZoom:13,scrollWheelZoom:true,wheelPxPerZoomLevel:90,attributionControl:true});
+  GM.tl=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"gm-tiles",attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
   const world=[[90,-180],[90,180],[-90,180],[-90,-180]],holes=[];const g=GM.geo.outline;
   (g.type==="Polygon"?[g.coordinates]:g.coordinates).forEach(p=>p.forEach(r=>holes.push(r.map(([x,y])=>[y,x]))));
   GM.mask=L.polygon([world,...holes],{stroke:false,fillOpacity:1,fillColor:"var(--bg)",className:"gm-mask",interactive:false}).addTo(m);
   GM.ol=L.geoJSON(g,{style:{fill:false,weight:1.5,color:"#6b7280"},interactive:false}).addTo(m);
-  m.setMaxBounds(GM.ol.getBounds().pad(.3));gmGo(null)}
+  m.setMaxBounds(GM.ol.getBounds().pad(.3));document.querySelectorAll("#gm-tabs button").forEach(b=>b.onclick=()=>gmTab(b.dataset.t));gmTab(GM.tab)}

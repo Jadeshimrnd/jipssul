@@ -4010,3 +4010,9 @@ body.view-community main>*:not(.community-page){display:none!important}
 [data-theme=dark] .gm-tt-lbl{color:#f1f2f4;text-shadow:0 0 3px #000}
 .leaflet-container{font-family:inherit}
 @media(max-width:720px){.gm-map{height:360px}.ggmap{padding:12px}}
+.gm-tabs{display:inline-flex;gap:4px;background:var(--chip,#eef0f3);border-radius:10px;padding:3px;margin-bottom:8px}
+.gm-tabs button{border:0;background:transparent;padding:6px 14px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted,#6b7280);cursor:pointer}
+.gm-tabs button.on{background:#fff;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+[data-theme=dark] .gm-tabs{background:#23272f}[data-theme=dark] .gm-tabs button.on{background:#374151;color:#f9fafb}
+.gm-tt-lbl{font-size:10.5px;padding:0;white-space:nowrap}
+@media(max-width:720px){.ggmap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
