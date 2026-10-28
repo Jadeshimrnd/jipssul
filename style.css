@@ -4017,3 +4017,8 @@ body.view-community main>*:not(.community-page){display:none!important}
 .gm-tt-lbl{font-size:10.5px;padding:0;white-space:nowrap}
 @media(max-width:720px){.ggmap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
 .gm-tt-lbl.gm-nopct .gm-p{display:none}.gm-tt-lbl.gm-hide{visibility:hidden}
+
+/* community separated from home */
+body:not(.view-community) .community-page{display:none!important}
+.community-page>*{margin-bottom:16px}
+.ad-home-b{margin:0 0 16px}

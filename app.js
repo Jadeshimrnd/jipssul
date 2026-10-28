@@ -699,10 +699,10 @@ function initBottomNav(){
     btn.onclick=()=>{
       const k=btn.dataset.nav;
       nav.querySelectorAll(".bnav-btn").forEach(x=>x.classList.toggle("on",x===btn));
-      if(k!=="community")setView("market");
+      if(k!=="community"&&k!=="lounge")setView("market");
       if(k==="top")window.scrollTo({top:0,behavior:"smooth"});
       else if(k==="list"){const el=$("#list-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}
-      else if(k==="lounge"){const el=$("#lounge-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}
+      else if(k==="lounge"){setView("community");document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"));setTimeout(()=>{const el=$("#lounge-sec");if(el)el.scrollIntoView({behavior:"smooth",block:"start"})},80)}
       else if(k==="community"){setView("community");document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x.dataset.view==="community"))}
       else if(k==="fav")openFav();
       else if(k==="pro")openReportModal("report");
@@ -1467,8 +1467,7 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-toast]");i
 
 // ---------- 커뮤니티 상단 페이지 뷰 ----------
 function setView(v){const on=v==="community";document.body.classList.toggle("view-community",on);
-  if(on){const b=$("#community-board"),s=$("#cp-slot");if(b&&s&&b.parentNode!==s)s.appendChild(b);window.scrollTo({top:0,behavior:"smooth"})}
-  else{const b=$("#community-board"),l=$("#cp-link");if(b&&l&&b.previousElementSibling!==l)l.after(b)}
+  if(on)window.scrollTo({top:0,behavior:"smooth"});
   document.querySelectorAll("#bnav .bnav-btn").forEach(x=>{if(on)x.classList.toggle("on",x.dataset.nav==="community");else if(x.dataset.nav==="community")x.classList.remove("on")});
   try{history.replaceState(null,"",on?"#community":location.pathname+location.search)}catch(e){}}
 function goMarket(){const t=document.querySelector('#tabs a[data-r="'+S.region+'"]')||document.querySelector('#tabs a[data-r="all"]');document.querySelectorAll("#tabs a").forEach(x=>x.classList.toggle("on",x===t));setView("market");window.scrollTo({top:0})}
