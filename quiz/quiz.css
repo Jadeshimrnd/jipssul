@@ -15,3 +15,5 @@ footer{position:fixed;bottom:0;left:0;right:0;z-index:999;text-align:center;font
 #end button{margin-top:6px}
 .pin{font-size:30px;line-height:30px;text-align:center}
 .leaflet-top{top:48px}
+
+#hint{font-size:13px;opacity:.75}#cbox[hidden],#hint[hidden]{display:none}#ctext{font-weight:800;font-size:16px;margin-bottom:8px;color:#ffcc33}.row{display:flex;gap:8px}button.ghost{background:#30363d;color:#eee}

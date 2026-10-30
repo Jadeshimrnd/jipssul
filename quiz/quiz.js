@@ -14,11 +14,12 @@ const $=id=>document.getElementById(id);
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 function score(d){if(d<=.5)return 100;if(d<=1)return 100-(d-.5)*4;const pts=[[1,98],[5,80],[15,50],[40,20],[100,0]];for(let i=1;i<pts.length;i++){const[a,sa]=pts[i-1],[b,sb]=pts[i];if(d<=b)return Math.round(sa+(sb-sa)*(d-a)/(b-a))}return 0}
 function load(){locked=false;guess=null;layers.forEach(l=>map.removeLayer(l));layers=[];gm=null;
- $('qbox').hidden=false;$('rbox').hidden=true;$('lock').disabled=true;$('qno').textContent=`Q${qi+1} / 5`;$('clue').textContent=QS[qi].c;$('prog').textContent=`${qi+1}/5`;
+ $('qbox').hidden=false;$('rbox').hidden=true;$('cbox').hidden=true;$('hint').hidden=false;$('qno').textContent=`Q${qi+1} / 5`;$('clue').textContent=QS[qi].c;$('prog').textContent=`${qi+1}/5`;
  map.setView([37.45,127.0],10)}
-map.on('click',e=>{if(locked)return;guess=[e.latlng.lat,e.latlng.lng];if(gm)gm.setLatLng(e.latlng);else{gm=L.marker(e.latlng,{icon:ic('📍')}).addTo(map);layers.push(gm)}
- if($('confirm').checked)$('lock').disabled=false;else lockIn()});
-function lockIn(){if(!guess||locked)return;locked=true;const q=QS[qi],d=hav(guess,q.a),s=score(d);res.push({d,s});
+map.on('click',e=>{if(locked)return;guess=[e.latlng.lat,e.latlng.lng];if(gm)gm.setLatLng(e.latlng);else{gm=L.marker(e.latlng,{icon:ic('📍'),draggable:true}).addTo(map);gm.on('dragend',()=>{const p=gm.getLatLng();guess=[p.lat,p.lng]});layers.push(gm)}
+ $('hint').hidden=true;$('cbox').hidden=false});
+$('retry').onclick=()=>{if(locked)return;if(gm){map.removeLayer(gm);layers=layers.filter(l=>l!==gm);gm=null}guess=null;$('cbox').hidden=true;$('hint').hidden=false};
+function lockIn(){if(!guess||locked)return;locked=true;gm.dragging&&gm.dragging.disable();const q=QS[qi],d=hav(guess,q.a),s=score(d);res.push({d,s});
  const am=L.marker(q.a,{icon:ic('🏠')}).addTo(map);const ln=L.polyline([guess,q.a],{color:'#ffcc33',dashArray:'6 6',weight:3}).addTo(map);layers.push(am,ln);
  map.fitBounds(L.latLngBounds([guess,q.a]).pad(.4),{maxZoom:15});
  $('qbox').hidden=true;$('rbox').hidden=false;$('rhead').textContent=`${d<1?(d*1000).toFixed(0)+' m':d.toFixed(1)+' km'} 차이 · ${s}점`;
