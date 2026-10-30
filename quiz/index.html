@@ -1,0 +1,17 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>집썰 퀴즈 (베타)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="quiz.css?v=20261030115547"></head><body>
+<header><b>집썰</b> <span class="beta">퀴즈 베타</span><span id="prog"></span><span id="tot"></span></header>
+<div id="map"></div>
+<section id="panel">
+ <div id="qbox"><div id="qno"></div><div id="clue"></div>
+ <label class="cf"><input type="checkbox" id="confirm"> 찍기 전 확인</label>
+ <button id="lock" disabled>여기로 확정</button></div>
+ <div id="rbox" hidden><div id="rhead"></div><div id="rfact"></div><button id="next">다음 문제</button></div>
+</section>
+<div id="end" hidden><div class="card"><h2>집썰 오늘의 퀴즈</h2><div id="big"></div><div id="rows"></div>
+<button id="copy">결과 복사</button> <button id="again">다시 하기</button><p class="ft">시안·프로토타입 · 투자 추천 아님 · 예시 좌표</p></div></div>
+<footer>시안·프로토타입 · 투자 추천 아님 · 예시 좌표 · 위성 © Esri</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="quiz.js?v=20261030115547"></script></body></html>
