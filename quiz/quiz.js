@@ -8,6 +8,10 @@ const map=L.map('map',{zoomControl:false,minZoom:7,maxZoom:18,maxBounds:[[32.5,1
 L.control.zoom({position:'topright'}).addTo(map);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'}).addTo(map);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.8}).addTo(map);
+map.createPane('metro').style.zIndex=410;map.createPane('places').style.zIndex=420;map.getPane('metro').style.pointerEvents='none';map.getPane('places').style.pointerEvents='none';
+(window.JS_METRO||[]).forEach(l=>{L.polyline(l.p,{pane:'metro',interactive:false,color:'#fff',weight:6,opacity:.35}).addTo(map);L.polyline(l.p,{pane:'metro',interactive:false,color:l.c,weight:3.5,opacity:.85,dashArray:l.d||null}).addTo(map);const m=l.p[Math.floor(l.p.length/2)];L.marker(m,{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-line',html:'<span style="background:'+l.c+'">'+l.n+'</span>',iconSize:null})}).addTo(map)});
+const plm=(window.JS_PLACES||[]).map(([n,a,b,z])=>({z,m:L.marker([a,b],{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-place'+(z>=12?' jl-sm':''),html:'<span>'+n+'</span>',iconSize:null})})}));
+function upl(){const z=map.getZoom();plm.forEach(o=>{if(z>=o.z)o.m.addTo(map);else o.m.remove()})}map.on('zoomend',upl);upl();
 const ic=(e)=>L.divIcon({className:'pin',html:e,iconSize:[30,30],iconAnchor:[15,30]});
 let qi=0,guess=null,gm=null,layers=[],res=[],locked=false;
 const $=id=>document.getElementById(id);
