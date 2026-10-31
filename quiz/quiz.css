@@ -22,3 +22,8 @@ footer{position:fixed;bottom:0;left:0;right:0;z-index:999;text-align:center;font
 .jl-line span{display:inline-block;color:#fff;font:700 10px/1 system-ui,sans-serif;padding:2px 5px;border-radius:8px;white-space:nowrap;opacity:.9;transform:translate(-50%,-50%);pointer-events:none}
 .jl-st span{display:inline-block;color:#fff;font:600 10px/1 system-ui,sans-serif;white-space:nowrap;text-shadow:0 0 2px #000,0 0 4px #000;transform:translate(5px,-50%);pointer-events:none}
 .jl-st.jl-x span{font-weight:800;font-size:11px}
+html.mob .jl-st span{font-size:11.5px;text-shadow:0 0 2px #000,0 0 4px #000,0 0 6px #000}
+html.mob .jl-st.jl-x span{font-size:12.5px}
+html.mob .jl-place span{font-size:15px}
+html.mob .jl-place.jl-sm span{font-size:13px}
+html.mob .jl-line span{font-size:11px;padding:3px 6px}

@@ -10,11 +10,13 @@ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.8}).addTo(map);
 map.createPane('metro').style.zIndex=410;map.createPane('places').style.zIndex=420;map.getPane('metro').style.pointerEvents='none';map.getPane('places').style.pointerEvents='none';
 (window.JS_LINES||[]).forEach(l=>{L.polyline(l.s,{pane:'metro',interactive:false,color:'#fff',weight:5.5,opacity:.3}).addTo(map);L.polyline(l.s,{pane:'metro',interactive:false,color:l.c,weight:3,opacity:.9,dashArray:l.d||null}).addTo(map);const sg=l.s[Math.floor(l.s.length/2)];L.marker(sg[0],{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-line',html:'<span style="background:'+l.c+'">'+l.n+'</span>',iconSize:null})}).addTo(map)});
+const MOB=matchMedia('(max-width:768px),(pointer:coarse)').matches,OFF=MOB?1:0;if(MOB)document.documentElement.classList.add('mob');
+const HUB=new Set(['서울역','강남','잠실','여의도','판교','동탄','미사','수서','신도림','홍대입구','왕십리','종로3가','사당','건대입구','고속터미널']);
 const stG=L.layerGroup().addTo(map);let stK='';
-function ust(){const z=map.getZoom(),b=map.getBounds().pad(.2),k=z+'|'+b.toBBoxString();if(k===stK)return;stK=k;stG.clearLayers();if(z<11)return;(window.JS_STATIONS||[]).forEach(([n,a,o,x])=>{if(!b.contains([a,o]))return;L.circleMarker([a,o],{pane:'metro',interactive:false,radius:x?3.5:2.5,color:'#222',weight:1,fillColor:'#fff',fillOpacity:1}).addTo(stG);if(z>=13||(x&&z>=12))L.marker([a,o],{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-st'+(x?' jl-x':''),html:'<span>'+n+'</span>',iconSize:null})}).addTo(stG)})}
+function ust(){const z=map.getZoom(),b=map.getBounds().pad(.2),k=z+'|'+b.toBBoxString();if(k===stK)return;stK=k;stG.clearLayers();if(z<11-OFF)return;(window.JS_STATIONS||[]).forEach(([n,a,o,x])=>{if(!b.contains([a,o]))return;L.circleMarker([a,o],{pane:'metro',interactive:false,radius:(x?3.5:2.5)-(z<11?1:0),color:'#222',weight:1,fillColor:'#fff',fillOpacity:1}).addTo(stG);if(z>=13-OFF||(x&&z>=12-OFF)||(MOB&&HUB.has(n)))L.marker([a,o],{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-st'+(x?' jl-x':''),html:'<span>'+n+'</span>',iconSize:null})}).addTo(stG)})}
 map.on('moveend',ust);ust();
 const plm=(window.JS_PLACES||[]).map(([n,a,b,z])=>({z,m:L.marker([a,b],{pane:'places',interactive:false,keyboard:false,icon:L.divIcon({className:'jl-place'+(z>=12?' jl-sm':''),html:'<span>'+n+'</span>',iconSize:null})})}));
-function upl(){const z=map.getZoom();plm.forEach(o=>{if(z>=o.z)o.m.addTo(map);else o.m.remove()})}map.on('zoomend',upl);upl();
+function upl(){const z=map.getZoom();plm.forEach(o=>{if(z>=o.z-OFF)o.m.addTo(map);else o.m.remove()})}map.on('zoomend',upl);upl();
 const ic=(e)=>L.divIcon({className:'pin',html:e,iconSize:[30,30],iconAnchor:[15,30]});
 let qi=0,guess=null,gm=null,layers=[],res=[],locked=false;
 const $=id=>document.getElementById(id);
